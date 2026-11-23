@@ -1,0 +1,2172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Welcome to Racket Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #EEF1EC;
+    --surface: #FFFFFF;
+    --ink: #13243A;
+    --muted: #566579;
+    --line: #D3DAD2;
+    --soft: #E3E8E1;
+    --a: #D9480F;
+    --b: #2B8A55;
+    --ball: #D6E22E;
+    --court: #245A9E;
+    --chalk: #F4F6F2;
+    --board: #10233C;
+    --board-ink: #EEF3F8;
+    --board-a: #FFB070;
+    --board-b: #86D9A8;
+    --warn-bg: #FFF4DB;
+    --warn-ink: #5B4300;
+    --cur: var(--a);
+    --display: "Barlow Condensed", "Arial Narrow", system-ui, sans-serif;
+    --body: "Instrument Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color-scheme: light;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0B1727;
+      --surface: #13243A;
+      --ink: #EAF0F7;
+      --muted: #9DB0C6;
+      --line: #263A53;
+      --soft: #22344C;
+      --a: #FF9F5A;
+      --b: #6FD39A;
+      --ball: #D6E22E;
+      --court: #245A9E;
+      --board: #0A1626;
+      --warn-bg: #3A2F10;
+      --warn-ink: #F3DDA0;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0B1727;
+    --surface: #13243A;
+    --ink: #EAF0F7;
+    --muted: #9DB0C6;
+    --line: #263A53;
+    --soft: #22344C;
+    --a: #FF9F5A;
+    --b: #6FD39A;
+    --ball: #D6E22E;
+    --court: #245A9E;
+    --board: #0A1626;
+    --warn-bg: #3A2F10;
+    --warn-ink: #F3DDA0;
+    color-scheme: dark;
+  }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  *, *::before, *::after { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 22px clamp(14px, 3vw, 32px) 56px; }
+  h1 {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: clamp(2.5rem, 6vw, 4.2rem);
+    line-height: 0.95;
+    letter-spacing: -0.01em;
+    margin: 0 0 8px;
+  }
+  .lede { margin: 0; color: var(--muted); max-width: 56ch; font-size: 1.05rem; }
+
+  /* toolbar */
+  .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; margin: 22px 0 18px; }
+  .seg { display: inline-flex; background: var(--soft); border-radius: 12px; padding: 4px; gap: 4px; }
+  .seg button {
+    font: 600 0.95rem var(--body);
+    color: var(--muted);
+    background: transparent;
+    border: 0;
+    border-radius: 9px;
+    padding: 9px 16px;
+    cursor: pointer;
+    display: inline-flex; align-items: center; gap: 8px;
+    transition: background 0.15s, color 0.15s;
+  }
+  .seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,0.12); }
+  .dot { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
+  .dot.a { background: var(--a); }
+  .dot.b { background: var(--b); }
+  .ghost {
+    font: 500 0.9rem var(--body);
+    color: var(--ink);
+    background: transparent;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 8px 14px;
+    cursor: pointer;
+  }
+  .ghost:hover { background: var(--soft); }
+  .check { display: inline-flex; align-items: center; gap: 8px; font-size: 0.92rem; color: var(--ink); cursor: pointer; }
+  .check input { width: 18px; height: 18px; accent-color: var(--cur); }
+
+  button:focus-visible, input:focus-visible, summary:focus-visible {
+    outline: 3px solid var(--cur);
+    outline-offset: 2px;
+  }
+
+  /* layout */
+  .layout { display: grid; grid-template-columns: 1fr; gap: 24px; align-items: start; }
+  @media (min-width: 1100px) {
+    .layout { grid-template-columns: minmax(0, 620px) minmax(0, 1fr); }
+    .stage { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); }
+  }
+  .stage { display: grid; grid-template-columns: 1fr; gap: 14px; }
+  @media (min-width: 640px) { .ccWrap { grid-template-columns: auto minmax(0, 1fr); } }
+
+  .courtCard {
+    background: var(--court);
+    border-radius: 20px;
+    padding: 10px 10px 14px;
+    color: #fff;
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .racketSvg { display: block; height: calc(clamp(250px, 36vh, 420px) * var(--z, 1)); width: auto; max-width: 100%; margin: auto; }
+  .racketSvg text { font-family: var(--body); font-size: 13.5px; fill: #fff; paint-order: stroke; stroke: var(--court); stroke-width: 3.5px; stroke-linejoin: round; }
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin: 8px 0 4px; }
+  .chips label { display: inline-flex; align-items: center; gap: 6px; font-size: 0.82rem; cursor: pointer; color: #fff; }
+  .chips input { accent-color: var(--ball); }
+  .stats { margin: 6px 6px 0; width: 100%; display: grid; gap: 2px; font-size: 0.86rem; }
+  .stats div { display: flex; justify-content: space-between; gap: 12px; border-top: 1px solid rgba(255,255,255,0.22); padding: 5px 4px 0; }
+  .stats b { font-family: var(--display); font-size: 1.15rem; font-weight: 600; letter-spacing: 0.01em; }
+
+  .resultCard { display: grid; gap: 14px; align-content: start; min-width: 0; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; }
+  .radarBox { padding: 8px 8px 4px; }
+  .radarSvg { width: 100%; height: auto; display: block; }
+  .radarSvg .grid { fill: none; stroke: var(--line); stroke-width: 1; }
+  .radarSvg .spoke { stroke: var(--line); stroke-width: 1; }
+  .radarSvg text { font-family: var(--body); font-size: 12.5px; fill: var(--ink); }
+  .rA { fill: var(--a); fill-opacity: 0.2; stroke: var(--a); stroke-width: 2.4; stroke-linejoin: round; }
+  .rB { fill: var(--b); fill-opacity: 0.14; stroke: var(--b); stroke-width: 2.4; stroke-dasharray: 7 4; stroke-linejoin: round; }
+  .vA { fill: var(--a); }
+  .vB { fill: var(--b); }
+
+  .board {
+    background: var(--board);
+    color: var(--board-ink);
+    border-radius: 14px;
+    padding: 10px 16px 12px;
+    border: 1px solid var(--line);
+  }
+  .bRow { display: grid; grid-template-columns: 1fr 58px 58px; align-items: baseline; padding: 3px 0; border-top: 1px solid rgba(255,255,255,0.1); }
+  .bRow.single { grid-template-columns: 1fr 58px; }
+  .bRow:first-child { border-top: 0; }
+  .bRow.head { font-size: 0.82rem; color: rgba(238,243,248,0.7); padding-bottom: 6px; }
+  .bRow.gap { margin-top: 6px; border-top: 2px solid rgba(255,255,255,0.28); padding-top: 8px; }
+  .bName { font-size: 0.95rem; }
+  .bNum { font-family: var(--display); font-size: 1.55rem; font-weight: 600; text-align: right; line-height: 1.1; color: var(--board-a); }
+  .bNum.b { color: var(--board-b); }
+  .bNum.lead { text-decoration: underline; text-decoration-color: var(--ball); text-decoration-thickness: 3px; text-underline-offset: 4px; }
+  .bRow.head .bNum { font-family: var(--body); font-size: 0.82rem; font-weight: 600; display: flex; justify-content: flex-end; align-items: center; gap: 6px; }
+  .bRow.head .dot { width: 9px; height: 9px; }
+  .bRow.head .bNum.a .dot { background: var(--board-a); }
+  .bRow.head .bNum.b .dot { background: var(--board-b); }
+
+  /* panel */
+  .panel { display: grid; gap: 18px; min-width: 0; }
+  .panel.isB { --cur: var(--b); }
+  .card h2 { font-family: var(--display); font-weight: 600; font-size: 1.85rem; line-height: 1.05; margin: 0 0 4px; letter-spacing: 0.005em; }
+  .card h3 { font: 600 0.98rem var(--body); margin: 18px 0 8px; }
+  .sub { color: var(--muted); font-size: 0.92rem; margin: 0 0 12px; }
+  .summary p { margin: 0 0 8px; }
+  .summary .diff { font-weight: 600; }
+  .flags { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 8px; }
+  .flags li { background: var(--warn-bg); color: var(--warn-ink); border-radius: 10px; padding: 9px 12px; font-size: 0.92rem; }
+  .flags li.ok { background: var(--soft); color: var(--muted); }
+
+  .presets { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 6px; }
+  .pre {
+    font: 500 0.88rem var(--body);
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink);
+    border-radius: 999px;
+    padding: 6px 13px;
+    cursor: pointer;
+  }
+  .pre:hover { background: var(--soft); }
+
+  .ctl { padding: 12px 0; border-top: 1px solid var(--line); }
+  .ctl:first-of-type { border-top: 0; }
+  .ctlHead { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+  .ctlHead label { font-weight: 600; }
+  .ctlHead output { font-size: 0.9rem; color: var(--muted); }
+  .ctlHead output b { font-family: var(--display); font-weight: 600; font-size: 1.7rem; color: var(--ink); margin-right: 3px; }
+  .tag { display: inline-block; font-size: 0.8rem; font-weight: 600; color: var(--ink); background: var(--soft); border-radius: 999px; padding: 2px 10px; margin: 2px 0 6px; }
+  .why { margin: 0; color: var(--muted); font-size: 0.9rem; max-width: 70ch; }
+
+  input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 28px; background: transparent; margin: 2px 0; --p: 50%; }
+  input[type=range]::-webkit-slider-runnable-track { height: 6px; border-radius: 3px; background: linear-gradient(to right, var(--cur) var(--p), var(--soft) var(--p)); }
+  input[type=range]::-moz-range-track { height: 6px; border-radius: 3px; background: linear-gradient(to right, var(--cur) var(--p), var(--soft) var(--p)); }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 24px; height: 24px; border-radius: 50%; background: var(--ball); border: 2px solid #13243A; margin-top: -9px; cursor: grab; }
+  input[type=range]::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: var(--ball); border: 2px solid #13243A; cursor: grab; }
+
+  .segmented { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0 8px; }
+  .segmented button {
+    font: 600 1.05rem var(--display);
+    letter-spacing: 0.02em;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink);
+    border-radius: 10px;
+    padding: 6px 16px;
+    cursor: pointer;
+  }
+  .segmented button[aria-checked="true"] { background: var(--cur); border-color: var(--cur); color: #fff; }
+  :root[data-theme="dark"] .segmented button[aria-checked="true"] { color: #0B1727; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .segmented button[aria-checked="true"] { color: #0B1727; } }
+
+  .switch { display: flex; align-items: center; gap: 10px; margin: 8px 0 4px; font-weight: 500; cursor: pointer; }
+  .switch input { width: 20px; height: 20px; accent-color: var(--cur); }
+  .matLabel { font: 600 0.92rem var(--body); margin: 12px 0 6px; }
+  .mats { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 8px; }
+  .mat {
+    display: flex; gap: 10px; align-items: center; text-align: left;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink);
+    border-radius: 10px;
+    padding: 8px 10px;
+    cursor: pointer;
+    font-family: var(--body);
+  }
+  .mat[disabled] { opacity: 0.45; cursor: not-allowed; }
+  .mat[aria-checked="true"] { border-color: var(--cur); box-shadow: inset 0 0 0 2px var(--cur); }
+  .mat .sw { flex: none; width: 36px; height: 24px; border-radius: 6px; background: #245A9E; display: grid; place-items: center; }
+  .mat .sw i { display: block; width: 24px; height: 3.5px; border-radius: 2px; }
+  .mat b { display: block; font-size: 0.9rem; line-height: 1.2; }
+  .mat small { display: block; color: var(--muted); font-size: 0.78rem; line-height: 1.25; }
+  [hidden] { display: none !important; }
+
+  details { border-top: 1px solid var(--line); padding: 10px 0; }
+  details:first-of-type { border-top: 0; }
+  summary { font-weight: 600; cursor: pointer; padding: 2px 0; }
+  details p { margin: 6px 0 0; color: var(--muted); font-size: 0.93rem; max-width: 72ch; }
+  .fine { color: var(--muted); font-size: 0.82rem; margin: 6px 4px 0; }
+
+  /* page navigation */
+  .nav { display: flex; gap: 4px; flex-wrap: wrap; margin: 22px 0 0; border-bottom: 1px solid var(--line); }
+  .nav a { font: 600 1.3rem var(--display); letter-spacing: 0.02em; color: var(--muted); text-decoration: none; padding: 8px 18px 10px; border-bottom: 3px solid transparent; margin-bottom: -1px; }
+  .nav a:hover { color: var(--ink); }
+  .nav a[aria-current="page"] { color: var(--ink); border-bottom-color: var(--cur); }
+  a:focus-visible { outline: 3px solid var(--cur); outline-offset: 2px; }
+  a.ghost { display: inline-block; text-decoration: none; }
+  .ghost.primary { background: var(--ink); color: var(--bg); border-color: var(--ink); font-weight: 600; }
+  .ghost.primary:hover { background: var(--ink); opacity: 0.88; }
+  .pager { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+  .resultsGrid { display: grid; grid-template-columns: 1fr; gap: 18px; align-items: start; }
+  @media (min-width: 900px) { .resultsGrid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+  #resultsPage .radarBox { padding: 16px; }
+  #resultsPage .summary { margin-top: 18px; }
+  #guidePage .card { max-width: 860px; }
+
+  .guide { display: grid; gap: 18px; max-width: 1080px; }
+  .gh { font-family: var(--display); font-weight: 600; font-size: clamp(2.2rem, 5vw, 3rem); line-height: 1; margin: 22px 0 10px; }
+  .guide .lead { font-size: 1.12rem; max-width: 62ch; margin: 0 0 10px; }
+  .src { color: var(--muted); font-size: 0.92rem; max-width: 72ch; margin: 0; }
+  .src a { color: var(--ink); text-underline-offset: 3px; }
+  .gk { display: inline-block; font-size: 0.74rem; font-weight: 600; background: var(--soft); color: var(--muted); border-radius: 999px; padding: 1px 9px; margin: 0 2px; vertical-align: 1px; }
+  .tableWrap { overflow-x: auto; }
+  table.types { border-collapse: collapse; width: 100%; min-width: 660px; font-size: 0.93rem; }
+  .types th, .types td { text-align: left; vertical-align: top; padding: 10px 14px 10px 0; border-top: 1px solid var(--line); }
+  .types thead th { border-top: 0; color: var(--muted); font: 600 0.85rem var(--body); padding-bottom: 6px; }
+  .types tbody th { font: 600 1.3rem var(--display); letter-spacing: 0.01em; white-space: nowrap; }
+  details p + p { margin-top: 8px; }
+
+  .courtCard { min-width: min(100%, 292px); }
+  .gauges { width: 100%; display: grid; gap: 10px; margin-top: 8px; padding: 0 6px; }
+  .g-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+  .g-name { font-size: 0.86rem; color: rgba(255,255,255,0.88); }
+  .g-chip { display: inline-block; font-size: 0.72rem; font-weight: 600; border-radius: 999px; padding: 1px 9px; margin-left: 8px; background: rgba(255,255,255,0.2); color: #fff; }
+  .g-chip.out { background: var(--ball); color: #13243A; }
+  .g-val { font-family: var(--display); font-weight: 600; font-size: 1.3rem; line-height: 1; letter-spacing: 0.01em; white-space: nowrap; }
+  .g-val small { font-family: var(--body); font-size: 0.72rem; font-weight: 400; opacity: 0.85; margin-left: 3px; }
+  .g-track { position: relative; height: 10px; margin: 5px 0 3px; }
+  .g-seg { position: absolute; top: 0; bottom: 0; border-radius: 3px; background: rgba(255,255,255,0.2); }
+  .g-seg.on { background: rgba(255,255,255,0.9); }
+  .g-tick { position: absolute; top: -4px; bottom: -4px; width: 2px; margin-left: -1px; background: #fff; border-radius: 1px; box-shadow: 0 0 0 1px rgba(36,90,158,0.9); }
+  .g-dot { position: absolute; top: 50%; width: 17px; height: 17px; margin: -8.5px 0 0 -8.5px; border-radius: 50%; background: var(--ball); border: 2px solid #13243A; }
+  .gcap { width: 100%; margin: 10px 6px 0; padding: 0 6px; font-size: 0.76rem; line-height: 1.4; color: rgba(255,255,255,0.88); }
+
+  .g-labs { display: flex; font-size: 0.64rem; line-height: 1.2; color: rgba(255,255,255,0.68); text-align: center; }
+  .g-lab { padding: 0 1px; overflow-wrap: anywhere; }
+  .g-lab b { display: block; font-weight: 600; font-size: 0.69rem; }
+  .g-lab.on { color: #fff; }
+  .gleg { width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 6px 10px; margin: 12px 6px 0; padding: 10px 6px 0; border-top: 1px solid rgba(255,255,255,0.25); font-size: 0.74rem; color: rgba(255,255,255,0.92); }
+  .gleg span { display: flex; align-items: center; gap: 7px; }
+  .lg-seg { width: 24px; height: 8px; border-radius: 3px; background: rgba(255,255,255,0.2); flex: none; }
+  .lg-seg.on { background: rgba(255,255,255,0.9); }
+  .lg-tick { width: 2px; height: 14px; background: #fff; box-shadow: 0 0 0 1px rgba(36,90,158,0.9); margin: 0 11px; flex: none; }
+  .lg-dot { width: 14px; height: 14px; border-radius: 50%; background: var(--ball); border: 2px solid #13243A; margin: 0 5px; flex: none; }
+  @media (min-width: 1100px) { .stage { max-height: calc(100vh - 24px); overflow-y: auto; align-items: start; } }
+
+  .guide { max-width: 1080px; }
+  .gsec { margin-top: 10px; }
+  .gh2 { font-family: var(--display); font-weight: 600; font-size: 2.1rem; line-height: 1; margin: 18px 0 6px; }
+  .gsec .sub { margin: 0 0 14px; }
+  .specGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr)); gap: 16px; }
+  .spec { background: var(--surface); border: 1px solid var(--line); border-left: 6px solid var(--court); border-radius: 14px; padding: 16px 18px 14px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+  .spec.wide { grid-column: 1 / -1; }
+  .spec h3 { font: 600 1.85rem/1 var(--display); margin: 0; letter-spacing: 0.005em; }
+  .spec .def { font-size: 1.06rem; font-weight: 500; line-height: 1.4; margin: 0; color: var(--ink); }
+  .tr { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; }
+  .tr h4 { display: inline-block; font: 600 0.88rem var(--body); margin: 0 0 8px; padding: 3px 11px; border-radius: 999px; background: var(--soft); color: var(--ink); }
+  .tr > div:first-child h4 { background: var(--court); color: #fff; }
+  .tr ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 5px; }
+  .tr li { position: relative; padding-left: 15px; font-size: 1rem; line-height: 1.35; font-weight: 500; }
+  .nums { display: flex; flex-wrap: wrap; gap: 7px; }
+  .nums span { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 10px; padding: 5px 11px; font-size: 0.78rem; color: var(--muted); line-height: 1.25; }
+  .nums b { font: 600 1.15rem/1.15 var(--display); color: var(--ink); letter-spacing: 0.01em; }
+  .spec .know { margin: 0; padding-top: 10px; border-top: 1px dashed var(--line); font-size: 0.9rem; color: var(--muted); line-height: 1.5; }
+  .matlist { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px 16px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+  .matlist li { display: flex; gap: 11px; align-items: flex-start; font-size: 0.95rem; line-height: 1.35; }
+  .matlist b { display: block; font-size: 1rem; }
+  .matlist .sw { flex: none; width: 38px; height: 26px; border-radius: 6px; background: #245A9E; display: grid; place-items: center; }
+  .matlist .sw i { display: block; width: 26px; height: 3.5px; border-radius: 2px; }
+  .terms { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 10px; }
+  .term { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; font-size: 0.95rem; line-height: 1.35; }
+  .term b { display: block; font: 600 1.35rem/1.1 var(--display); margin-bottom: 2px; }
+
+  .ex { width: 100%; border-collapse: collapse; min-width: 760px; font-size: 0.9rem; }
+  .ex th, .ex td { text-align: left; padding: 9px 14px 9px 0; border-top: 1px solid var(--line); vertical-align: middle; }
+  .ex thead th { border-top: 0; color: var(--muted); font: 600 0.78rem var(--body); padding-bottom: 6px; }
+  .ex tbody th { font-weight: 600; font-size: 0.97rem; line-height: 1.25; }
+  .ex tbody th small { display: block; font-weight: 400; font-size: 0.75rem; color: var(--muted); }
+  .ex td { font: 600 1.25rem/1.1 var(--display); letter-spacing: 0.01em; }
+  .ex td small { display: block; font: 400 0.72rem var(--body); color: var(--muted); letter-spacing: 0; }
+  .ex .ld { white-space: nowrap; }
+  .exBtn { display: inline-flex; align-items: center; gap: 6px; font: 600 0.85rem var(--body); border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 8px; padding: 5px 11px; cursor: pointer; margin-right: 6px; }
+  .exBtn:hover { background: var(--soft); }
+  .exBtn .dot { width: 9px; height: 9px; }
+
+  .whoRow { width: 100%; display: grid; gap: 4px; padding: 4px 8px 8px; }
+  .whoLine { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; font-weight: 600; line-height: 1.25; }
+  .who { flex: none; display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; font: 700 0.74rem var(--body); color: #13243A; background: #fff; }
+  .who.a { background: #FF9A3C; }
+  .who.b { background: #86D9A8; }
+  .cmpNote { width: 100%; margin: 2px 8px 0; padding: 0 8px; font-size: 0.76rem; line-height: 1.35; color: rgba(255,255,255,0.88); }
+  .cmpNote:empty { display: none; }
+  .g-dot.a { background: #FF9A3C; }
+  .g-dot.b { background: #86D9A8; }
+  .gp { display: block; }
+  .gp-title { font-size: 0.86rem; font-weight: 600; color: rgba(255,255,255,0.92); margin-bottom: 2px; }
+  .gp .g-row { margin-top: 6px; }
+  .gp .g-chip { margin-left: 6px; }
+  .gp .who { margin-right: 0; }
+  .gauges .g + .g { margin-top: 2px; }
+
+  .mat { align-items: flex-start; }
+  .mat .sw { margin-top: 2px; }
+  .mat small.pick { margin-top: 4px; color: var(--ink); }
+  .mat small.pick i { font-style: normal; font-weight: 600; }
+  .matlist em { display: block; font-style: normal; color: var(--muted); font-size: 0.9rem; margin-top: 3px; }
+  .pk { font-weight: 600; color: var(--ink); }
+  .matlist svg { display: block; }
+
+  .finder { margin: 16px 0 0; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; }
+  .finderRow { display: flex; flex-wrap: wrap; gap: 12px 14px; align-items: flex-end; }
+  .fld { display: grid; gap: 4px; font-size: 0.82rem; color: var(--muted); font-weight: 600; }
+  .fld.grow { flex: 1 1 280px; position: relative; }
+  .fld select, .fld input { font: 500 1rem var(--body); color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; min-height: 42px; }
+  .fld input { width: 100%; }
+  #racketList, #skList { position: absolute; left: 0; right: 0; top: 100%; margin: 4px 0 0; padding: 4px; list-style: none; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 10px 28px rgba(0,0,0,0.2); max-height: 300px; overflow: auto; z-index: 30; }
+  #racketList li, #skList li { display: flex; justify-content: space-between; gap: 12px; padding: 9px 11px; border-radius: 8px; cursor: pointer; font-size: 0.95rem; }
+  #racketList li span, #skList li span { color: var(--muted); font-size: 0.85rem; flex: none; }
+  #racketList li[aria-selected="true"], #racketList li:hover, #skList li[aria-selected="true"], #skList li:hover { background: var(--soft); }
+  #racketList li.none, #skList li.none { color: var(--muted); cursor: default; }
+  .rkCard { margin-top: 14px; border-top: 1px solid var(--line); padding-top: 14px; display: grid; gap: 12px; }
+  .rkTop { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+  .rkTop h3 { font: 600 1.8rem/1 var(--display); margin: 0; }
+  .rkSpecs b small { font: 400 0.72rem var(--body); color: var(--muted); letter-spacing: 0; }
+  .rkSpecs em { font-style: normal; font-size: 0.72rem; font-weight: 600; color: var(--ink); }
+  .rkAct { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; }
+  .rkAct a { color: var(--ink); font-size: 0.9rem; text-underline-offset: 3px; }
+
+  .rkSub { font: 600 0.95rem var(--body); margin: 2px 0 -4px; color: var(--ink); }
+  .rkSpecs { gap: 5px; }
+  .rkSpecs span { padding: 3px 9px; font-size: 0.68rem; border-radius: 8px; }
+  .rkSpecs b { font-size: 1rem; }
+  .rkSpecs b small { font-size: 0.66rem; }
+  .rkSpecs em { font-size: 0.66rem; }
+  .rkTour { background: var(--soft); border-radius: 10px; padding: 10px 13px; font-size: 0.92rem; line-height: 1.4; display: grid; gap: 3px; }
+  .rkTour small { color: var(--muted); font-size: 0.76rem; line-height: 1.35; margin-top: 3px; }
+
+  .zoomBar { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; align-items: center; margin: 6px 0 2px; }
+  .zbtn { font: 600 0.78rem var(--body); color: #fff; background: rgba(255,255,255,0.16); border: 1px solid rgba(255,255,255,0.34); border-radius: 8px; padding: 5px 10px; cursor: pointer; min-height: 32px; }
+  .zbtn:hover { background: rgba(255,255,255,0.28); }
+  .zlabel { font: 600 0.8rem var(--body); color: #fff; min-width: 40px; text-align: center; }
+  .zmodal { position: fixed; inset: 0; z-index: 100; background: rgba(5,12,22,0.75); display: grid; place-items: center; padding: 14px; }
+  .zbox { background: var(--surface); color: var(--ink); border-radius: 16px; width: min(96vw, 900px); max-height: 96vh; display: grid; gap: 10px; padding: 14px 16px; overflow: auto; }
+  .zhead { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .zhead h3 { font: 600 1.7rem/1 var(--display); margin: 0; }
+  .zbox .zbtn { color: var(--ink); background: var(--soft); border-color: var(--line); }
+  .zbox .zbtn:hover { background: var(--line); }
+  .zbox .zlabel { color: var(--ink); }
+  .zwho { display: grid; gap: 4px; font-size: 0.9rem; }
+  .zstage { background: var(--court); border-radius: 14px; display: flex; padding: 8px; max-height: min(74vh, 800px); overflow: hidden; color: #fff; }
+  .zstage.zoomed { overflow: auto; cursor: grab; touch-action: none; }
+  .zstage.zoomed .racketSvg { max-width: none; }
+  .zstage.drag { cursor: grabbing; }
+  .zstage .racketSvg { height: calc(min(70vh, 760px) * var(--z, 1)); }
+  #racketMount { display: flex; max-width: 100%; max-height: clamp(250px, 36vh, 420px); overflow: hidden; }
+  #racketMount.zoomed { overflow: auto; cursor: grab; touch-action: none; }
+  #racketMount.zoomed .racketSvg { max-width: none; }
+
+  .viewToggle { display: flex; justify-content: flex-start; }
+  .ccWrap { display: grid; grid-template-columns: 1fr; gap: 14px 18px; width: 100%; align-items: start; }
+  .ccLeft { display: flex; flex-direction: column; align-items: center; min-width: 0; }
+  .ccRight { display: flex; flex-direction: column; min-width: 0; }
+  .ccRight .gauges, .ccRight .gleg, .ccRight .gcap { margin-left: 0; margin-right: 0; padding-left: 0; padding-right: 0; }
+  #resultCard { width: 100%; }
+  .rcLeft, .rcRight { display: grid; gap: 14px; align-content: start; min-width: 0; }
+  #resultCard .whoRow { padding: 0 4px 6px; color: var(--ink); }
+
+  @media (min-width: 900px) { #resultCard { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 20px; align-items: start; } }
+  @media (min-width: 1100px) {
+    .layout.chartMode, .layout.solo { grid-template-columns: minmax(0, 1fr); }
+    .layout.chartMode .stage, .layout.solo .stage { position: static; max-height: none; overflow: visible; }
+  }
+  #resultCard .bRow { grid-template-columns: 1fr 76px 76px; padding: 7px 0; }
+  #resultCard .bRow.single { grid-template-columns: 1fr 76px; }
+  #resultCard .bName { font-size: 1.05rem; }
+  #resultCard .bNum { font-size: 1.9rem; }
+  #resultCard .bRow.head .bNum { font-size: 0.85rem; }
+  #resultCard .board { padding: 12px 20px 14px; }
+
+  #resultCard .rcFull { grid-column: 1 / -1; margin-top: 6px; }
+  .rkTldr { margin: 0; font-size: 0.95rem; line-height: 1.45; padding: 2px 2px 0; }
+  .rkTldr b { font-weight: 700; }
+
+  #resultCard .gh2 { font-size: 1.9rem; margin-top: 4px; }
+  #resultCard .terms { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+  #resultCard .term { padding: 10px 12px; }
+
+  #builderPage .lead { font-size: 1.1rem; max-width: 74ch; margin: 0 0 6px; }
+  .bGrid { display: grid; grid-template-columns: 1fr; gap: 18px; align-items: start; margin-top: 14px; }
+  .bGrid:not(.searched) #racketCard { max-width: 760px; }
+  @media (min-width: 1000px) { .bGrid.searched { grid-template-columns: minmax(0, 1fr) minmax(0, 440px); } .mPanel { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); } }
+  .mHead { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .mHead h2 { margin: 0; }
+  .findBar { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); }
+  .findBtn { font: 600 1.1rem var(--body); background: var(--ink); color: var(--bg); border: 0; border-radius: 12px; padding: 14px 24px; cursor: pointer; }
+  .findBtn:hover { opacity: 0.9; }
+  .mPanel { display: grid; gap: 10px; min-width: 0; }
+  .mTabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 10px 0 14px; }
+  .mTab { text-align: left; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 12px; padding: 8px 10px; cursor: pointer; font-family: var(--body); min-width: 0; }
+  .mTab b { display: block; font: 600 1.7rem/1 var(--display); }
+  .mTab span { display: block; font-size: 0.74rem; color: var(--muted); line-height: 1.25; overflow-wrap: anywhere; }
+  .mTab[aria-pressed="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 2px var(--ink); }
+  .mTop { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+  .mTop h3 { font: 600 1.7rem/1 var(--display); margin: 0; }
+  .kdot { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin: 0 5px 0 12px; transform: rotate(45deg); }
+  .kdot:first-child { margin-left: 0; }
+  .sl { position: relative; }
+  .sl .ovBand { position: absolute; top: 50%; height: 6px; margin-top: -3px; border-radius: 3px; pointer-events: none; opacity: 0.85; }
+  .sl .ovMark { position: absolute; top: 50%; width: 15px; height: 15px; margin: -7.5px 0 0 -7.5px; border-radius: 3px; border: 2px solid #13243A; transform: rotate(45deg); pointer-events: none; z-index: 2; }
+  .sl .ovBand[hidden], .sl .ovMark[hidden] { display: none; }
+  .fit { display: flex; align-items: center; gap: 8px; font-size: 0.82rem; margin: 2px 0 6px; min-height: 18px; }
+  .fit .fitBar { flex: 0 0 84px; height: 6px; background: var(--soft); border-radius: 3px; overflow: hidden; }
+  .fit .fitBar i { display: block; height: 100%; }
+  .segmented button.rk { box-shadow: 0 0 0 2px var(--ink); }
+  .layout.solo .courtCard { max-width: 820px; justify-self: start; width: 100%; }
+
+  .mRows { display: grid; gap: 16px; margin: 12px 0; }
+  .mRow { display: grid; gap: 6px; }
+  .mrTop { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .mrTop .nm { font-weight: 600; font-size: 0.98rem; color: var(--ink); }
+  .mrTop .pc { font: 600 1.05rem var(--display); letter-spacing: 0.01em; }
+  .mrTrack { position: relative; height: 24px; }
+  .mrLine { position: absolute; left: 8px; right: 8px; top: 50%; height: 4px; margin-top: -2px; background: var(--soft); border-radius: 2px; }
+  .mrBand { position: absolute; top: 50%; height: 8px; margin-top: -4px; border-radius: 4px; opacity: 0.85; }
+  .mrTick { position: absolute; top: 50%; width: 2px; height: 12px; margin: -6px 0 0 -1px; background: var(--line); border-radius: 1px; }
+  .mrYou { position: absolute; top: 50%; width: 18px; height: 18px; margin: -9px 0 0 -9px; border-radius: 50%; background: var(--ink); border: 3px solid var(--surface); box-shadow: 0 0 0 2px var(--ink); z-index: 2; }
+  .mrRk { position: absolute; top: 50%; width: 16px; height: 16px; margin: -8px 0 0 -8px; border-radius: 3px; transform: rotate(45deg); border: 2px solid #13243A; z-index: 3; }
+  .mrVals { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chipYou, .chipRk { display: flex; align-items: baseline; gap: 8px; border-radius: 10px; }
+  .chipYou { background: var(--ink); color: var(--bg); padding: 6px 13px; }
+  .chipRk { background: var(--surface); color: var(--ink); border: 2px solid; padding: 4px 12px; }
+  .chipYou small, .chipRk small { font-size: 0.7rem; font-weight: 600; opacity: 0.85; }
+  .chipYou b, .chipRk b { font: 600 1.3rem/1 var(--display); letter-spacing: 0.01em; }
+  .mLegend { display: flex; gap: 16px; font-size: 0.82rem; color: var(--muted); align-items: center; margin-top: 10px; }
+  .mLegend span { display: inline-flex; align-items: center; gap: 7px; }
+  .lgYou { width: 14px; height: 14px; border-radius: 50%; background: var(--ink); display: inline-block; }
+  .lgRk { width: 12px; height: 12px; border-radius: 2px; background: #8FA0B3; border: 2px solid #13243A; transform: rotate(45deg); display: inline-block; }
+
+  /* ---------- mobile ---------- */
+  html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+  @media (max-width: 700px) {
+    .wrap { padding-top: 14px; padding-bottom: 40px; }
+    h1 { font-size: 2.3rem; }
+    .lede { font-size: 1rem; }
+
+    /* tabs scroll sideways and stay in reach */
+    .nav { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 40; background: var(--bg); flex-wrap: nowrap; overflow-x: auto; margin-top: 14px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+    .nav::-webkit-scrollbar { display: none; }
+    .nav a { white-space: nowrap; padding: 10px 14px 11px; font-size: 1.2rem; flex: none; }
+
+    /* bigger touch targets */
+    .seg button, .ghost, .pre, .exBtn, .zbtn, .segmented button, .mat, .mTab { min-height: 44px; }
+    .zbtn { padding: 8px 12px; font-size: 0.85rem; }
+    .findBtn { width: 100%; min-height: 52px; }
+    .check { min-height: 44px; }
+    .check input, .switch input { width: 22px; height: 22px; }
+    input[type=range] { height: 40px; }
+    .fld select, .fld input, #skGauge { font-size: 16px !important; min-height: 46px; }
+    .toolbar { gap: 8px 14px; margin: 14px 0 12px; }
+    .finder { padding: 12px; }
+    .finderRow { gap: 10px; }
+    .fld { flex: 1 1 100%; }
+
+    /* cards breathe less */
+    .card { padding: 14px; }
+    .card h2 { font-size: 1.6rem; }
+    .spec { padding: 14px 14px 12px; }
+    .spec h3 { font-size: 1.6rem; }
+    .gh2 { font-size: 1.7rem; }
+
+    /* the drawing gets more room on a tall, narrow screen */
+    .racketSvg { height: calc(clamp(300px, 55vh, 480px) * var(--z, 1)); }
+    #racketMount { max-height: clamp(300px, 55vh, 480px); }
+    .courtCard { padding: 8px 6px 12px; border-radius: 16px; }
+    .viewToggle .seg { width: 100%; }
+    .viewToggle .seg button { flex: 1; justify-content: center; }
+    .g-labs { font-size: 0.7rem; }
+    .g-lab b { font-size: 0.74rem; }
+    .g-chip { font-size: 0.76rem; }
+    .gleg { font-size: 0.78rem; }
+
+    /* chart view */
+    #resultCard .bNum { font-size: 1.7rem; }
+    #resultCard .board { padding: 10px 14px 12px; }
+
+    /* builder */
+    .mTabs { gap: 6px; }
+    .mTab { padding: 8px; }
+    .mTab b { font-size: 1.5rem; }
+    .mTab span { font-size: 0.72rem; }
+    .chipYou b, .chipRk b { font-size: 1.2rem; }
+    .fit { flex-wrap: wrap; }
+    .fit .fitBar { flex-basis: 70px; }
+
+    /* example racket tables turn into stacked cards */
+    .ex { min-width: 0; }
+    .ex thead { display: none; }
+    .ex, .ex tbody { display: block; width: 100%; }
+    .ex tr { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; border-top: 1px solid var(--line); padding: 12px 0; }
+    .ex tbody th { grid-column: 1 / -1; padding: 0; border: 0; white-space: normal; }
+    .ex td { display: block; padding: 0; border: 0; }
+    .ex td::before { display: block; font: 600 0.7rem var(--body); color: var(--muted); letter-spacing: 0; margin-bottom: 1px; }
+    .ex td:nth-of-type(1)::before { content: "Head size"; }
+    .ex td:nth-of-type(2)::before { content: "Strung weight"; }
+    .ex td:nth-of-type(3)::before { content: "Balance"; }
+    .ex td:nth-of-type(4)::before { content: "Stiffness (RA)"; }
+    .ex td:nth-of-type(5)::before { content: "Swingweight"; }
+    .ex td:nth-of-type(6)::before { content: "Pattern"; }
+    .ex td.ld { grid-column: 1 / -1; display: flex; gap: 8px; }
+    .ex td.ld::before { display: none; }
+    .ex td.ld .exBtn { flex: 1; justify-content: center; margin: 0; }
+
+    /* the enlarge view goes full screen */
+    .zmodal { padding: 0; }
+    .zbox { width: 100vw; max-height: 100vh; height: 100vh; border-radius: 0; }
+    .zstage .racketSvg { height: calc(min(62vh, 640px) * var(--z, 1)); }
+    .zstage { max-height: 68vh; }
+  }
+  @media (max-width: 400px) {
+    .wrap { padding-left: 10px; padding-right: 10px; }
+    .nav a { padding: 10px 11px 11px; }
+    .terms { grid-template-columns: 1fr; }
+    #resultCard .terms { grid-template-columns: 1fr 1fr; }
+  }
+
+  .rkSpecs span { padding: 0 0 6px; gap: 0; overflow: hidden; border-radius: 9px; color: var(--ink); }
+  .rkSpecs .tl { display: block; font: 600 0.76rem var(--body); font-style: normal; color: var(--ink); background: var(--soft); padding: 4px 11px; margin: 0 0 5px; letter-spacing: 0; line-height: 1.2; }
+  .rkSpecs b { padding: 0 11px; }
+  .rkSpecs em { padding: 0 11px; margin-top: 1px; }
+
+  .tr > div { background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px 12px; }
+  .tr > div:first-child { border-left: 4px solid var(--court); }
+  .tr ul { gap: 9px; margin-top: 2px; }
+  .tr li { padding-left: 32px; min-height: 24px; display: flex; align-items: center; font-size: 1rem; line-height: 1.3; }
+  .tr li::before { position: absolute; left: 0; top: 50%; margin-top: -12px; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font: 700 0.9rem/1 var(--body); box-sizing: border-box; }
+  .tr li.pro::before { content: "✓"; background: #2F9E62; color: #fff; }
+  .tr li.con::before { content: "−"; background: #E3A008; color: #13243A; font-size: 1.1rem; }
+  .tr li.neu::before { content: ""; background: var(--soft); border: 2px solid var(--line); }
+  .kpro, .kcon { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; font: 700 0.72rem/1 var(--body); margin: 0 4px 0 2px; vertical-align: -3px; }
+  .kpro { background: #2F9E62; color: #fff; }
+  .kcon { background: #E3A008; color: #13243A; font-size: 0.9rem; }
+  .spec .know::before { content: "i"; display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; background: var(--soft); color: var(--muted); font: 700 0.72rem/1 var(--body); margin-right: 8px; vertical-align: 1px; }
+
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Welcome to Racket Lab</h1>
+    <p class="lede">Finally, a place to understand all the numbers tennis rackets and strings come with. Start at the spec guide, and explore from there.</p>
+  </header>
+
+  <nav class="nav" id="nav" aria-label="Pages">
+    <a href="#guide" data-page="guide">Spec guide</a>
+    <a href="#racket" data-page="racket">Rackets</a>
+    <a href="#strings" data-page="strings">Strings</a>
+    <a href="#builder" data-page="builder">Racket Builder</a>
+  </nav>
+
+  <section class="finder" id="finder" aria-label="Find a racket" hidden>
+    <div class="finderRow">
+      <div class="fld"><label for="brandSel">Brand</label><select id="brandSel"></select></div>
+      <div class="fld grow comboWrap">
+        <label for="racketQ">Search current rackets</label>
+        <input id="racketQ" type="text" role="combobox" aria-expanded="false" aria-controls="racketList" aria-autocomplete="list" autocomplete="off" placeholder="Type a model, like Pure Drive, Blade or EZONE">
+        <ul id="racketList" role="listbox" aria-label="Matching rackets" hidden></ul>
+      </div>
+    </div>
+    <div class="rkCard" id="finderCard" hidden aria-live="polite"></div>
+    <p class="fine" style="margin:10px 0 0">Current models only. Specs are from Tennis Warehouse product pages, checked in November 2026. Where Tennis Express lists different numbers, the racket card says so. Load a racket into Option A or B to see it on the chart.</p>
+  </section>
+
+  <section class="finder" id="stringFinder" aria-label="Find a string" hidden>
+    <div class="finderRow">
+      <div class="fld"><label for="sBrandSel">Brand</label><select id="sBrandSel"></select></div>
+      <div class="fld grow comboWrap">
+        <label for="skQ">Search popular strings</label>
+        <input id="skQ" type="text" role="combobox" aria-expanded="false" aria-controls="skList" aria-autocomplete="list" autocomplete="off" placeholder="Type a string, like Hyper-G, NXT or Touch VS">
+        <ul id="skList" role="listbox" aria-label="Matching strings" hidden></ul>
+      </div>
+    </div>
+    <div class="rkCard" id="skCard" hidden aria-live="polite"></div>
+    <p class="fine" style="margin:10px 0 0">Popular strings only. Shapes, gauges and lab numbers come from Tennis Warehouse and Tennis Express, checked in November 2026. Gauge sizes in mm are approximate, since brands measure differently. Load a string into Option A or B to see it on the chart.</p>
+  </section>
+
+  <div class="toolbar" id="toolbar" role="group" aria-label="Option controls">
+    <div class="seg" id="setupSeg">
+      <button type="button" data-setup="A" aria-pressed="true"><i class="dot a"></i>Option A</button>
+      <button type="button" data-setup="B" aria-pressed="false"><i class="dot b"></i>Option B</button>
+    </div>
+    <label class="check" id="cmpWrap"><input type="checkbox" id="compareChk"> <span id="cmpLabel">Compare a racket</span></label>
+  </div>
+
+  <main class="layout" id="buildLayout" hidden>
+    <section class="stage" id="stage" aria-label="Live results">
+      <div class="viewToggle">
+        <div class="seg" id="viewSeg" role="group" aria-label="Show the drawing or the chart">
+          <button type="button" data-view="drawing" aria-pressed="true">Racket</button>
+          <button type="button" data-view="chart" aria-pressed="false">Chart</button>
+        </div>
+      </div>
+      <div class="courtCard" id="courtCard">
+        <div class="whoRow" id="whoRow"></div>
+        <div class="ccWrap">
+        <div class="ccLeft">
+        <div id="racketMount"></div>
+        <p class="cmpNote" id="cmpNote"></p>
+        <div class="zoomBar" id="zoomBar" aria-label="Zoom the racket drawing"></div>
+        <div class="chips" id="racketChips">
+          <label><input type="checkbox" id="sweetChk" checked> Sweet spot</label>
+          <label><input type="checkbox" id="balChk" checked> Balance point</label>
+        </div>
+        </div>
+        <div class="ccRight">
+        <div class="gauges" id="stats"></div>
+        <div class="gleg" aria-label="How to read the gauges">
+          <span><i class="lg-seg on"></i>Zone it falls in</span>
+          <span><i class="lg-seg"></i>Other zones</span>
+          <span><i class="lg-tick"></i>Typical value</span>
+          <span><i class="lg-dot"></i>Your option</span>
+        </div>
+        <p class="gcap" id="gcap">Each bar is split into labeled zones. Typical: 100 sq in, 298 g strung, even balance, 66 RA, 16×19. A yellow label flags an unusual value.</p>
+        </div>
+        </div>
+      </div>
+      <div class="resultCard" id="resultCard" hidden>
+        <div class="rcLeft">
+          <div class="whoRow" id="whoRow2"></div>
+          <div class="card radarBox" id="radarMount"></div>
+        </div>
+        <div class="rcRight">
+          <div class="board" id="board" aria-label="Scoreboard"></div>
+          <div class="board" id="stringBoard" hidden aria-label="String scores"></div>
+          <p class="fine" id="swNote"></p>
+        </div>
+        <div class="rcFull gsec" id="readChart"></div>
+      </div>
+    </section>
+
+    <section class="panel" id="panel">
+      <div class="pager" id="racketPager" hidden>
+        <a class="ghost" href="#guide">Back: Spec guide</a>
+        <a class="ghost primary" href="#strings">Next: Strings</a>
+      </div>
+
+      <div class="card" id="stringCard" hidden>
+        <h2>Strings</h2>
+        <p class="sub">Material sets the character. Gauge and tension tune it.</p>
+        <div class="presets" id="stringPresets"></div>
+        <label class="switch"><input type="checkbox" id="hybridChk"> Hybrid: use different strings for mains and crosses</label>
+        <div class="matLabel" id="matLabel1">String</div>
+        <div class="mats" id="mats1" role="radiogroup" aria-labelledby="matLabel1"></div>
+        <div id="crossWrap" hidden>
+          <div class="matLabel" id="matLabel2">Crosses (horizontal strings)</div>
+          <div class="mats" id="mats2" role="radiogroup" aria-labelledby="matLabel2"></div>
+        </div>
+        <div class="matLabel" id="shapeLabel">String shape</div>
+        <div class="mats" id="shapes" role="radiogroup" aria-labelledby="shapeLabel"></div>
+        <p class="why" id="shapeNote" style="margin-top:8px"></p>
+        <div id="stringSliders" style="margin-top:10px"></div>
+        <div class="pager">
+          <a class="ghost" href="#racket">Back: Rackets</a>
+          <a class="ghost primary" href="#builder">Next: Racket Builder</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <section id="builderPage" hidden aria-label="Racket Builder">
+    <h2 class="gh">Racket Builder</h2>
+    <p class="lead">Move the sliders to set the specs you want in a racket. When you’re done, press “Find me similar rackets” to see the three current rackets that line up most closely with your numbers, one at a time. On every slider, a diamond and colored bar will then show where that racket sits and how close it is to your pick.</p>
+    <div class="bGrid" id="bGrid">
+      <div class="card" id="racketCard">
+        <h2>Your target specs</h2>
+        <p class="sub">Start from a racquet type if it helps, then set each spec the way you want it.</p>
+        <div class="presets" id="racketPresets"></div>
+        <div id="racketSliders"></div>
+        <div class="ctl">
+          <div class="ctlHead"><label id="patLabel">String pattern</label><output id="patOut"></output></div>
+          <div class="segmented" id="patternSeg" role="radiogroup" aria-labelledby="patLabel"></div>
+          <div class="fit" id="fit-pattern"></div>
+          <p class="why" id="patWhy">Mains are the vertical strings and crosses are the horizontal ones. An open pattern like 16×18 lets the strings move more, which adds spin and power but wears them faster. A dense pattern like 18×20 feels firmer, lasts longer and gives more control.</p>
+        </div>
+        <div class="findBar" id="findBar">
+          <button type="button" class="findBtn" id="findBtn">Find me similar rackets</button>
+          <p class="fine" style="margin:8px 0 0">Set all six specs first. You can keep adjusting afterward and the matches will update.</p>
+        </div>
+      </div>
+      <div class="mPanel" id="mPanel" hidden>
+        <div class="card">
+          <div class="mHead"><h2>Your three closest rackets</h2><button type="button" class="ghost" id="hideMatches">Hide matches</button></div>
+          <div class="mTabs" id="mTabs" role="group" aria-label="Choose a match"></div>
+          <div id="mDetail" aria-live="polite"></div>
+        </div>
+        <p class="fine" style="margin:0"><span class="kdot" style="background:#2F9E62"></span>Well aligned <span class="kdot" style="background:#E3A008"></span>Close <span class="kdot" style="background:#D9534F"></span>Far from your pick</p>
+      </div>
+    </div>
+    <div class="pager">
+      <a class="ghost" href="#strings">Back: Strings</a>
+      <a class="ghost primary" href="#racket">See a racket on the Rackets tab</a>
+    </div>
+  </section>
+
+  <section id="guidePage" aria-label="Spec guide">
+    <div class="guide">
+      <div>
+        <h2 class="gh">Spec guide</h2>
+        <p class="lead">Start here. These are the numbers you’ll see on a racquet or a string package, and what each one does to the way it plays. Once you think you understand the specs, move to the Rackets tab to see how popular rackets stack up. If you know what specs you want, go to the Racket Builder.</p>
+        <p class="src">Based mainly on Tennis Warehouse’s <a href="https://www.tennis-warehouse.com/learning_center/gear_guides/tennis_racquets/selecting_the_right_tennis_racquet.html" target="_blank" rel="noopener">How to Pick the Right Tennis Racquet</a>, with definitions from their <a href="https://www.tennis-warehouse.com/learning_center/gear_guides/racquet_and_string_terms.html" target="_blank" rel="noopener">Guide to Racquet and String Terms</a>. Entries marked <span class="gk">general knowledge</span> cover things those guides don’t, so treat them as common wisdom rather than Tennis Warehouse’s word.</p>
+      </div>
+
+      <div class="gsec">
+        <h2 class="gh2">Racquet specs</h2>
+        <p class="sub">The dark label is what happens when the number goes up, and the light label is what happens when it goes down. <span class="kpro">✓</span> a benefit <span class="kcon">−</span> a cost.</p>
+        <div class="specGrid"><article class="spec"><h3>Head size</h3><p class="def">The area of the hitting surface, in square inches.</p><div class="tr"><div><h4>Bigger head</h4><ul><li class="pro">More power</li><li class="pro">Bigger sweet spot</li><li class="pro">More forgiving on off-center hits</li></ul></div><div><h4>Smaller head</h4><ul><li class="pro">More control and precision</li><li class="neu">Tends to suit stronger players</li><li class="con">Less forgiving when you miss the center</li></ul></div></div><div class="nums"><span><b>Midsize</b>85–95</span><span><b>Small midplus</b>96–99</span><span><b>Large midplus</b>100–104</span><span><b>Oversize</b>105+</span></div><p class="know">Most racquets today are 97 to 100 sq in, a blend of power and control that works for many players. Tennis Warehouse’s own classes are midsize 85–96, midplus 96–106, oversize 107–115 and super oversize 116+. The tool splits that range more finely.</p></article><article class="spec"><h3>Length</h3><p class="def">Standard is 27 in. Frames run from 26.5 to 29 in, and 29 is the tournament limit.</p><div class="tr"><div><h4>Longer frame</h4><ul><li class="pro">More reach on groundstrokes</li><li class="pro">More leverage on serves</li><li class="pro">A little more power</li><li class="con">Higher swingweight, so harder to swing</li></ul></div><div><h4>Standard length</h4><ul><li class="pro">Easier to maneuver</li><li class="con">Less reach and leverage</li></ul></div></div><div class="nums"><span><b>Standard</b>27 in</span><span><b>Tournament limit</b>29 in</span></div><p class="know">Many long frames are light so they stay maneuverable. This tool doesn’t model length.</p></article><article class="spec"><h3>Weight</h3><p class="def">How much the frame weighs. Strung weight, with strings added, is what you actually swing.</p><div class="tr"><div><h4>Heavier</h4><ul><li class="pro">More power</li><li class="pro">More stable on contact</li><li class="pro">Less shock to the arm</li><li class="pro">Better “plow-through”</li><li class="con">Harder to swing</li></ul></div><div><h4>Lighter</h4><ul><li class="pro">Easier to swing and position</li><li class="pro">Easier to generate spin</li><li class="pro">Quicker hands at the net</li></ul></div></div><div class="nums"><span><b>Light</b>under 270 g</span><span><b>Medium</b>270–312 g</span><span><b>Heavy</b>312–340 g</span><span><b>Very heavy</b>340+ g</span></div><p class="know">You can add weight to a frame but can’t take it away, so if you’re unsure, start lighter.</p></article><article class="spec"><h3>Balance</h3><p class="def">Where the frame’s weight sits, measured from the butt of the handle.</p><div class="tr"><div><h4>Head-heavy</h4><ul><li class="pro">More power and plow-through for the same weight</li><li class="neu">Common in very light frames</li></ul></div><div><h4>Head-light</h4><ul><li class="pro">Feels lighter and swings faster</li><li class="neu">Common in heavy frames</li></ul></div></div><div class="nums"><span><b>Even</b>343 mm (13.5 in)</span><span><b>One point</b>1/8 in (3.2 mm)</span><span><b>Extra head-light</b>8+ points</span></div><p class="know">A 27 in frame that balances at 12.5 in is 8 points head-light.</p></article><article class="spec"><h3>Swingweight</h3><p class="def">How heavy the frame feels while you swing it. It depends on weight, length, balance and head size.</p><div class="tr"><div><h4>Higher</h4><ul><li class="pro">More power</li><li class="pro">More stability</li><li class="pro">More comfort</li><li class="con">Harder to swing</li></ul></div><div><h4>Lower</h4><ul><li class="pro">Easier to accelerate</li><li class="pro">Easier to position</li><li class="con">Less stable against heavy pace</li></ul></div></div><div class="nums"><span><b>Low</b>305 and below</span><span><b>Medium</b>310–325</span><span><b>High</b>above 325</span></div><p class="know">Advanced players tend to like higher numbers, beginners and intermediates lower. This tool estimates swingweight from weight, balance and head size.</p></article><article class="spec"><h3>Stiffness (RA)</h3><p class="def">A flex score for the frame. Lower numbers bend more.</p><div class="tr"><div><h4>Stiffer</h4><ul><li class="pro">More power: the frame bends less, so it takes less energy from the ball</li><li class="con">More shock to wrist, elbow and shoulder</li></ul></div><div><h4>More flexible</h4><ul><li class="pro">More feel</li><li class="pro">Gentler on the arm</li><li class="con">Less power</li></ul></div></div><div class="nums"><span><b>Flexible</b>63 and below</span><span><b>Medium</b>64–67</span><span><b>Stiff</b>68 and up</span></div><p class="know">Myth: flexible frames “catapult” the ball. The ball is gone in 3 to 5 milliseconds, before the frame can spring back, so frames only absorb energy. With arm or shoulder trouble, Tennis Warehouse suggests RA 66 or lower.</p></article><article class="spec"><h3>Beam width</h3><p class="def">The thickness of the frame, in millimeters.</p><div class="tr"><div><h4>Wider beam</h4><ul><li class="neu">Stiffer frame</li><li class="pro">More power, through that stiffness</li></ul></div><div><h4>Thinner beam</h4><ul><li class="neu">More flexible frame</li><li class="pro">More feel and control</li></ul></div></div><p class="know">Tennis Warehouse says little beyond “wider is stiffer,” so the tool treats beam width as a small nudge on top of RA.</p></article><article class="spec"><h3>String pattern</h3><p class="def">Mains by crosses: how many vertical and horizontal strings the frame has.</p><div class="tr"><div><h4>Open (fewer strings)</h4><ul><li class="pro">More power and a higher launch</li><li class="pro">More spin, as the strings snap back</li><li class="con">Strings wear and break sooner</li></ul></div><div><h4>Dense (more strings)</h4><ul><li class="pro">More control</li><li class="pro">Longer string life</li><li class="pro">Room for softer, thinner strings</li></ul></div></div><div class="nums"><span><b>Very open</b>16×18</span><span><b>Open</b>16×19</span><span><b>Medium</b>16×20</span><span><b>Dense</b>18×20</span></div><p class="know">Dense patterns give up some string movement, but they let you swing fast and make the spin that way.</p></article><article class="spec"><h3>Forgiveness and sweet spot</h3><p class="def">The sweet spot is the area with the most power and accuracy and the least shock.</p><div class="tr"><div><h4>Bigger, wider head</h4><ul><li class="pro">Bigger sweet spot</li><li class="pro">Resists twisting on off-center hits</li></ul></div><div><h4>Smaller, narrower head</h4><ul><li class="con">Smaller sweet spot</li><li class="con">Needs cleaner contact</li></ul></div></div><p class="know">The yellow oval on the racket drawing is the tool’s rough picture of this. It grows with head size, swingweight and beam width.</p></article></div>
+      </div>
+
+      <div class="gsec">
+        <h2 class="gh2">String specs</h2>
+        <p class="sub">Material sets the character. Gauge and tension tune it. <span class="kpro">✓</span> a benefit <span class="kcon">−</span> a cost.</p>
+        <div class="specGrid"><article class="spec wide"><h3>String material <span class="gk">general knowledge</span></h3><p class="def">What the string is made of sets its character.</p><ul class="matlist"><li><span class="sw"><i style="background:#F3DFA2"></i></span><span><b>Natural gut</b>Soft, lively and crisp, with great touch. Holds tension longest.<em><span class="pk">Pick it if</span> you want the best feel and comfort and will pay for it. Great as a cross string.</em></span></li><li><span class="sw"><i style="background:#FFFFFF"></i></span><span><b>Multifilament</b>Soft and cushioned with easy power. Gentle on the arm.<em><span class="pk">Pick it if</span> you want comfort on a budget or have a tender arm. It wears out faster than polyester.</em></span></li><li><span class="sw"><i style="background:#E8E2C8"></i></span><span><b>Synthetic gut</b>Basic and balanced: a bit of everything, nothing extreme.<em><span class="pk">Pick it if</span> you want a cheap, forgiving all-rounder for casual play.</em></span></li><li><span class="sw"><i style="background:#A8E6CF"></i></span><span><b>Soft co-polyester</b>Poly control and spin with more give. Lower power, easier on the arm than firm poly.<em><span class="pk">Pick it if</span> you swing fast and want control without the harshness of firm poly.</em></span></li><li><span class="sw"><i style="background:#C5CBD6"></i></span><span><b>Firm polyester</b>Stiff, slippery and low power. Keeps the ball down and lasts long, but goes dead fast.<em><span class="pk">Pick it if</span> you swing hard, break strings, and want to keep the ball in. Restring often.</em></span></li></ul><p class="know">Tennis Warehouse adds a note on pairing: a stiff, powerful frame with a stiff, spin-friendly string is how much of the elite modern power game is played. For recreational players, the same pairing can cause comfort problems.</p></article><article class="spec wide"><h3>String shape <span class="gk">partly general knowledge</span></h3><p class="def">The cross-section of the string. Edges grip the ball, so shape changes bite, spin and feel.</p><div class="tr"><div><h4>More edges</h4><ul><li class="pro">More bite and spin</li><li class="con">Often firmer, with lower power</li><li class="con">Can feel less predictable</li></ul></div><div><h4>Rounder</h4><ul><li class="pro">More predictable response</li><li class="pro">Smoother, often more comfortable</li><li class="con">Less bite on the ball</li></ul></div></div><ul class="matlist"><li><span class="sw"><svg viewBox="0 0 38 26" width="38" height="26" aria-hidden="true"><circle cx="19" cy="13" r="8.5" fill="#F4F6F2"/></svg></span><span><b>Round</b>Smooth and predictable. The ball leaves on a consistent line.<em><span class="pk">Pick it if</span> you want comfort and consistency, or a simple baseline.</em></span></li><li><span class="sw"><svg viewBox="0 0 38 26" width="38" height="26" aria-hidden="true"><circle cx="19" cy="13" r="7.0" fill="#F4F6F2"/><circle cx="27.3" cy="13.0" r="1.4" fill="#F4F6F2"/><circle cx="25.7" cy="17.9" r="1.4" fill="#F4F6F2"/><circle cx="21.6" cy="20.9" r="1.4" fill="#F4F6F2"/><circle cx="16.4" cy="20.9" r="1.4" fill="#F4F6F2"/><circle cx="12.3" cy="17.9" r="1.4" fill="#F4F6F2"/><circle cx="10.7" cy="13.0" r="1.4" fill="#F4F6F2"/><circle cx="12.3" cy="8.1" r="1.4" fill="#F4F6F2"/><circle cx="16.4" cy="5.1" r="1.4" fill="#F4F6F2"/><circle cx="21.6" cy="5.1" r="1.4" fill="#F4F6F2"/><circle cx="25.7" cy="8.1" r="1.4" fill="#F4F6F2"/></svg></span><span><b>Textured</b>Round string with a gritty surface that grips the ball a little more.<em><span class="pk">Pick it if</span> you want a bit more spin without the edgy feel of a shaped string.</em></span></li><li><span class="sw"><svg viewBox="0 0 38 26" width="38" height="26" aria-hidden="true"><polygon points="26.9,16.3 22.3,20.9 15.7,20.9 11.1,16.3 11.1,9.7 15.7,5.1 22.3,5.1 26.9,9.7" fill="#F4F6F2"/></svg></span><span><b>Multi-sided</b>Five to eight flat faces. The corners catch the ball for more spin and control.<em><span class="pk">Pick it if</span> you want more spin than round but less harshness than square.</em></span></li><li><span class="sw"><svg viewBox="0 0 38 26" width="38" height="26" aria-hidden="true"><rect x="11.7" y="5.7" width="14.6" height="14.6" fill="#F4F6F2"/></svg></span><span><b>Square</b>Four sharp edges that dig into the ball. Most spin, a flat low-power response and a firm feel.<em><span class="pk">Pick it if</span> you swing fast and long and want heavy topspin that still lands in.</em></span></li><li><span class="sw"><svg viewBox="0 0 38 26" width="38" height="26" aria-hidden="true"><polygon points="27.4,16.1 22.4,17.0 20.5,21.8 17.2,18.0 12.2,18.7 13.8,13.9 10.6,9.9 15.6,9.0 17.5,4.2 20.8,8.0 25.8,7.3 24.2,12.1" fill="#F4F6F2"/></svg></span><span><b>Twisted</b>Edges spiral along the string. Bites like a shaped string but plays livelier.<em><span class="pk">Pick it if</span> you want edge-driven spin with more comfort and pop than a square string.</em></span></li></ul><p class="know">Tennis Warehouse’s spin picks include square, pentagon, octagon and twisted-gear strings, and it describes a firm square string as its top spin performer, with a low-powered response. Shapes are mostly used on polyester, so the tool applies them only to polyester strings.</p></article><article class="spec"><h3>Gauge</h3><p class="def">String thickness. A higher number means a thinner string, and L means a half step thinner.</p><div class="tr"><div><h4>Thinner</h4><ul><li class="pro">More feel</li><li class="pro">More power</li><li class="pro">More spin</li></ul></div><div><h4>Thicker</h4><ul><li class="pro">More durable</li><li class="pro">Longer string life</li></ul></div></div><div class="nums"><span><b>15</b>1.40 mm</span><span><b>15L</b>1.35 mm</span><span><b>16</b>1.30 mm</span><span><b>16L</b>1.25 mm</span><span><b>17</b>1.20 mm</span><span><b>18</b>1.15 mm</span></div><p class="know">Most strings are 15 to 17. Brands measure differently: one 16 gauge may be 1.28 mm and another 1.32 mm.</p></article><article class="spec"><h3>Tension <span class="gk">partly general knowledge</span></h3><p class="def">How tightly the strings are pulled, in pounds.</p><div class="tr"><div><h4>Higher tension</h4><ul><li class="pro">More control</li><li class="con">Less power</li><li class="con">More shock to the arm</li></ul></div><div><h4>Lower tension</h4><ul><li class="pro">More power</li><li class="pro">Softer feel</li><li class="pro">Less shock to the arm</li></ul></div></div><div class="nums"><span><b>Machine setting</b>60 lb</span><span><b>Actual in frame</b>about 50–55 lb</span></div><p class="know">The machine setting is always higher than the tension that ends up in the frame. Continuous-pull machines string about 5 to 10 percent tighter than lockout machines, so compare numbers only from the same kind of machine. A small, stiff, light frame strung tight is the harshest combination for the arm.</p></article><article class="spec"><h3>Hybrid stringing <span class="gk">partly general knowledge</span></h3><p class="def">Different strings for the mains and the crosses. They can differ in type or gauge.</p><div class="tr"><div><h4>Mains (vertical)</h4><ul><li class="neu">Do most of the spin and control work</li><li class="neu">Often the firmer, more durable string</li></ul></div><div><h4>Crosses (horizontal)</h4><ul><li class="pro">Add feel, comfort and power</li><li class="neu">Often the softer string</li></ul></div></div><p class="know">A common recipe is polyester mains with a soft cross like gut or multifilament. Tennis Warehouse mentions Kevlar mains with nylon crosses, but only as a last resort for people who break strings constantly. It suggests thicker nylon or polyester first, because Kevlar is extremely stiff.</p></article><article class="spec"><h3>String life and tension loss <span class="gk">partly general knowledge</span></h3><p class="def">Strings lose tension and elasticity over time, until they “play dead.”</p><div class="tr"><div><h4>Lasts longer</h4><ul><li class="pro">Thicker gauge</li><li class="pro">Dense pattern</li><li class="pro">Natural gut holds tension best</li></ul></div><div><h4>Wears out sooner</h4><ul><li class="con">Thin gauge</li><li class="con">Open pattern</li><li class="con">Polyester loses tension quickly</li></ul></div></div><p class="know">Elasticity is how readily strings return to position after contact, and resilience is how fast they do it. As both fade, the stringbed feels dead and you work harder.</p></article></div>
+      </div>
+
+      <div class="gsec">
+        <h2 class="gh2">Four kinds of racquet</h2>
+        <p class="sub">Tennis Warehouse sorts racquets into four families, and the presets on the Racket page follow the same four. Each example sits with the type its specs best match. Specs are Tennis Warehouse’s published strung specs, checked in November 2026, and they change between model years. Press A or B to load a racquet into that option and compare it.</p>
+        <div class="specGrid"><article class="spec wide"><h3>Power</h3><div class="nums"><span><b>107–135 sq in</b>Head</span><span><b>227–269 g (8–9.5 oz)</b>Weight</span><span><b>Head-heavy or even</b>Balance</span></div><p class="def">For shorter, slower swings that need the racquet to supply pace. Usually stiff, and often longer than 27 in.</p><div class="tableWrap"><table class="ex"><thead><tr><th scope="col">Example racquets</th><th scope="col">Head size</th><th scope="col">Strung weight</th><th scope="col">Balance</th><th scope="col">Stiffness (RA)</th><th scope="col">Swingweight</th><th scope="col">Pattern</th><th scope="col">Load into</th></tr></thead><tbody><tr><th scope="row">Head PWR 110</th><td>110<small>sq in</small></td><td>278 g<small>9.8 oz</small></td><td>1 pt HH</td><td>65</td><td>315</td><td>16×19</td><td class="ld"><button type="button" class="exBtn" data-setup="A" data-head="110" data-strung="278" data-balance="351" data-ra="65" data-beam="25" data-pattern="16x19" aria-label="Load Head PWR 110 into option A"><i class="dot a"></i>A</button><button type="button" class="exBtn" data-setup="B" data-head="110" data-strung="278" data-balance="351" data-ra="65" data-beam="25" data-pattern="16x19" aria-label="Load Head PWR 110 into option B"><i class="dot b"></i>B</button></td></tr><tr><th scope="row">Head PWR 115</th><td>115<small>sq in</small></td><td>244 g<small>8.6 oz</small></td><td>9 pts HH</td><td>67</td><td>312</td><td>16×19</td><td class="ld"><button type="button" class="exBtn" data-setup="A" data-head="115" data-strung="244" data-balance="360" data-ra="67" data-beam="29" data-pattern="16x19" aria-label="Load Head PWR 115 into option A"><i class="dot a"></i>A</button><button type="button" class="exBtn" data-setup="B" data-head="115" data-strung="244" data-balance="360" data-ra="67" data-beam="29" data-pattern="16x19" aria-label="Load Head PWR 115 into option B"><i class="dot b"></i>B</button></td></tr></tbody></table></div><p class="know">Both examples are extended length (27.4 and 27.7 in), which this tool doesn’t model. Loading the PWR 115 caps the balance at the slider’s limit, so the gauge shows less head-heavy than the real racquet.</p></article><article class="spec wide"><h3>Tweener</h3><div class="nums"><span><b>98–104 sq in</b>Head</span><span><b>269–312 g (9.5–11 oz)</b>Weight</span><span><b>Slightly head-light to slightly head-heavy</b>Balance</span></div><p class="def">Intermediate to advanced players. Low-medium to medium-high power, light, fast and very spin-friendly. Tennis Warehouse’s most popular type.</p><div class="tableWrap"><table class="ex"><thead><tr><th scope="col">Example racquets</th><th scope="col">Head size</th><th scope="col">Strung weight</th><th scope="col">Balance</th><th scope="col">Stiffness (RA)</th><th scope="col">Swingweight</th><th scope="col">Pattern</th><th scope="col">Load into</th></tr></thead><tbody><tr><th scope="row">Babolat Pure Drive Team<small>2025</small></th><td>100<small>sq in</small></td><td>301 g<small>10.6 oz</small></td><td>5 pts HL</td><td>69</td><td>308</td><td>16×19</td><td class="ld"><button type="button" class="exBtn" data-setup="A" data-head="100" data-strung="301" data-balance="326" data-ra="69" data-beam="24" data-pattern="16x19" aria-label="Load Babolat Pure Drive Team 2025 into option A"><i class="dot a"></i>A</button><button type="button" class="exBtn" data-setup="B" data-head="100" data-strung="301" data-balance="326" data-ra="69" data-beam="24" data-pattern="16x19" aria-label="Load Babolat Pure Drive Team 2025 into option B"><i class="dot b"></i>B</button></td></tr><tr><th scope="row">Babolat Pure Aero Team<small>2026</small></th><td>100<small>sq in</small></td><td>301 g<small>10.6 oz</small></td><td>4 pts HL</td><td>66</td><td>306</td><td>16×19</td><td class="ld"><button type="button" class="exBtn" data-setup="A" data-head="100" data-strung="301" data-balance="330" data-ra="66" data-beam="24" data-pattern="16x19" aria-label="Load Babolat Pure Aero Team 2026 into option A"><i class="dot a"></i>A</button><button type="button" class="exBtn" data-setup="B" data-head="100" data-strung="301" data-balance="330" data-ra="66" data-beam="24" data-pattern="16x19" aria-label="Load Babolat Pure Aero Team 2026 into option B"><i class="dot b"></i>B</button></td></tr><tr><th scope="row">Yonex EZONE 100L<small>2025</small></th><td>100<small>sq in</small></td><td>301 g<small>10.6 oz</small></td><td>3 pts HL</td><td>67</td><td>310</td><td>16×19</td><td class="ld"><button type="button" class="exBtn" data-setup="A" data-head="100" data-strung="301" data-balance="335" data-ra="67" data-beam="25" data-pattern="16x19" aria-label="Load Yonex EZONE 100L 2025 into option A"><i class="dot a"></i>A</button><button type="button" class="exBtn" data-setup="B" data-head="100" data-strung="301" data-balance="335" data-ra="67" data-beam="25" data-pattern="16x19" aria-label="Load Yonex EZONE 100L 2025 into option B"><i class="dot b"></i>B</button></td></tr></tbody></table></div></article><article class="spec wide"><h3>Modern player’s</h3><div class="nums"><span><b>About 98–100 sq in</b>Head</span><span><b>312–340 g (11–12 oz) strung</b>Weight</span><span><b>Varies</b>Balance</span></div><p class="def">Heavy topspin attackers. Power is close to a tweener, but lighter and faster than a traditional player’s frame.</p><div class="tableWrap"><table class="ex"><thead><tr><th scope="col">Example racquets</th><th scope="col">Head size</th><th scope="col">Strung weight</th><th scope="col">Balance</th><th scope="col">Stiffness (RA)</th><th scope="col">Swingweight</th><th scope="col">Pattern</th><th scope="col">Load into</th></tr></thead><tbody><tr><th scope="row">Prince Textreme Warrior 100</th><td>100<small>sq in</small></td><td>316 g<small>11.1 oz</small></td><td>6 pts HL</td><td>66</td><td>320</td><td>16×18</td><td class="ld"><button type="button" class="exBtn" data-setup="A" data-head="100" data-strung="316" data-balance="323" data-ra="66" data-beam="24" data-pattern="16x18" aria-label="Load Prince Textreme Warrior 100 into option A"><i class="dot a"></i>A</button><button type="button" class="exBtn" data-setup="B" data-head="100" data-strung="316" data-balance="323" data-ra="66" data-beam="24" data-pattern="16x18" aria-label="Load Prince Textreme Warrior 100 into option B"><i class="dot b"></i>B</button></td></tr><tr><th scope="row">Babolat Pure Drive<small>2025</small></th><td>100<small>sq in</small></td><td>318 g<small>11.2 oz</small></td><td>4 pts HL</td><td>69</td><td>317</td><td>16×19</td><td class="ld"><button type="button" class="exBtn" data-setup="A" data-head="100" data-strung="318" data-balance="330" data-ra="69" data-beam="24" data-pattern="16x19" aria-label="Load Babolat Pure Drive 2025 into option A"><i class="dot a"></i>A</button><button type="button" class="exBtn" data-setup="B" data-head="100" data-strung="318" data-balance="330" data-ra="69" data-beam="24" data-pattern="16x19" aria-label="Load Babolat Pure Drive 2025 into option B"><i class="dot b"></i>B</button></td></tr><tr><th scope="row">Babolat Pure Aero<small>2026</small></th><td>100<small>sq in</small></td><td>318 g<small>11.2 oz</small></td><td>4 pts HL</td><td>66</td><td>320</td><td>16×19</td><td class="ld"><button type="button" class="exBtn" data-setup="A" data-head="100" data-strung="318" data-balance="330" data-ra="66" data-beam="24" data-pattern="16x19" aria-label="Load Babolat Pure Aero 2026 into option A"><i class="dot a"></i>A</button><button type="button" class="exBtn" data-setup="B" data-head="100" data-strung="318" data-balance="330" data-ra="66" data-beam="24" data-pattern="16x19" aria-label="Load Babolat Pure Aero 2026 into option B"><i class="dot b"></i>B</button></td></tr></tbody></table></div></article><article class="spec wide"><h3>Traditional player’s</h3><div class="nums"><span><b>85–98 sq in</b>Head</span><span><b>326–340+ g (11.5–12+ oz)</b>Weight</span><span><b>Head-light</b>Balance</span></div><p class="def">Strong players who make their own power and want control. Thin, flexible beams and low power.</p><div class="tableWrap"><table class="ex"><thead><tr><th scope="col">Example racquets</th><th scope="col">Head size</th><th scope="col">Strung weight</th><th scope="col">Balance</th><th scope="col">Stiffness (RA)</th><th scope="col">Swingweight</th><th scope="col">Pattern</th><th scope="col">Load into</th></tr></thead><tbody><tr><th scope="row">Yonex Percept 97</th><td>97<small>sq in</small></td><td>326 g<small>11.5 oz</small></td><td>7 pts HL</td><td>60</td><td>315</td><td>16×19</td><td class="ld"><button type="button" class="exBtn" data-setup="A" data-head="97" data-strung="326" data-balance="320" data-ra="60" data-beam="21" data-pattern="16x19" aria-label="Load Yonex Percept 97 into option A"><i class="dot a"></i>A</button><button type="button" class="exBtn" data-setup="B" data-head="97" data-strung="326" data-balance="320" data-ra="60" data-beam="21" data-pattern="16x19" aria-label="Load Yonex Percept 97 into option B"><i class="dot b"></i>B</button></td></tr><tr><th scope="row">Head Radical Pro<small>2025</small></th><td>98<small>sq in</small></td><td>332 g<small>11.7 oz</small></td><td>6 pts HL</td><td>65</td><td>329</td><td>16×19</td><td class="ld"><button type="button" class="exBtn" data-setup="A" data-head="98" data-strung="332" data-balance="324" data-ra="65" data-beam="21" data-pattern="16x19" aria-label="Load Head Radical Pro 2025 into option A"><i class="dot a"></i>A</button><button type="button" class="exBtn" data-setup="B" data-head="98" data-strung="332" data-balance="324" data-ra="65" data-beam="21" data-pattern="16x19" aria-label="Load Head Radical Pro 2025 into option B"><i class="dot b"></i>B</button></td></tr><tr><th scope="row">Wilson Pro Staff 97<small>v14</small></th><td>97<small>sq in</small></td><td>332 g<small>11.7 oz</small></td><td>7 pts HL</td><td>66</td><td>325</td><td>16×19</td><td class="ld"><button type="button" class="exBtn" data-setup="A" data-head="97" data-strung="332" data-balance="320" data-ra="66" data-beam="22" data-pattern="16x19" aria-label="Load Wilson Pro Staff 97 v14 into option A"><i class="dot a"></i>A</button><button type="button" class="exBtn" data-setup="B" data-head="97" data-strung="332" data-balance="320" data-ra="66" data-beam="22" data-pattern="16x19" aria-label="Load Wilson Pro Staff 97 v14 into option B"><i class="dot b"></i>B</button></td></tr></tbody></table></div></article></div>
+      </div>
+
+      <div class="pager"><a class="ghost primary" href="#racket">Start with a racket</a></div>
+    </div>
+  </section>
+</div>
+
+<div class="zmodal" id="zmodal" hidden role="dialog" aria-modal="true" aria-label="Enlarged racket drawing">
+  <div class="zbox">
+    <div class="zhead"><h3>Racket close-up</h3><button type="button" class="zbtn" id="zclose" data-act="close">Close</button></div>
+    <div class="zoomBar" id="zbar2"></div>
+    <div class="zwho" id="zwho"></div>
+    <div class="zstage" id="zmount"></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var $ = function (s) { return document.querySelector(s); };
+  var clamp = function (x, a, b) { a = a === undefined ? 0 : a; b = b === undefined ? 1 : b; return Math.min(b, Math.max(a, x)); };
+  var norm = function (x, a, b) { return clamp((x - a) / (b - a)); };
+
+  /* ---------- data ---------- */
+  var MATERIALS = {
+    gut:    { name: "Natural gut",        note: "Soft, lively and crisp, with great touch. Holds tension longest.", pick: "you want the best feel and comfort and will pay for it. Great as a cross string.", color: "#F3DFA2", p: 92, c: 58, s: 55, cf: 96, d: 25, t: 92 },
+    multi:  { name: "Multifilament",      note: "Soft and cushioned with easy power. Gentle on the arm.", pick: "you want comfort on a budget or have a tender arm. It wears out faster than polyester.", color: "#FFFFFF", p: 80, c: 50, s: 48, cf: 86, d: 35, t: 60 },
+    synth:  { name: "Synthetic gut",      note: "Basic and balanced: a bit of everything, nothing extreme.", pick: "you want a cheap, forgiving all-rounder for casual play.",            color: "#E8E2C8", p: 62, c: 56, s: 46, cf: 62, d: 55, t: 55 },
+    copoly: { name: "Soft co-polyester",  note: "Poly control and spin with more give. Lower power, easier on the arm than firm poly.", pick: "you swing fast and want control without the harshness of firm poly.",       color: "#A8E6CF", p: 42, c: 80, s: 78, cf: 50, d: 76, t: 42 },
+    poly:   { name: "Firm polyester",     note: "Stiff, slippery and low power. Keeps the ball down and lasts long, but goes dead fast.", pick: "you swing hard, break strings, and want to keep the ball in. Restring often.",       color: "#C5CBD6", p: 30, c: 86, s: 82, cf: 30, d: 88, t: 35 },
+  };
+  var POLY = { copoly: 1, poly: 1 };
+  var OPEN = { "16x18": 1, "16x19": 0.72, "16x20": 0.5, "18x20": 0.15 };
+  var PATTERNS = ["16x18", "16x19", "16x20", "18x20"];
+  var GAUGE = { "1.10": "18L", "1.15": "18", "1.20": "17", "1.25": "16L", "1.30": "16", "1.35": "15L", "1.40": "15" };
+
+  var SHAPES = {
+    round: { name: "Round", short: "round", note: "Smooth and predictable. The ball leaves on a consistent line.", pick: "you want comfort and consistency, or a simple baseline.", effect: "In the scores: no spin boost and no penalty.", d: { p: 0, c: 0, s: 0, cf: 0, d: 0 } },
+    textured: { name: "Textured", short: "textured", note: "Round string with a gritty surface that grips the ball a little more.", pick: "you want a bit more spin without the edgy feel of a shaped string.", effect: "In the scores: a small spin boost with almost no cost in feel or power.", d: { p: 0, c: 2, s: 6, cf: 0, d: 0 } },
+    multi: { name: "Multi-sided", short: "multi-sided", note: "Five to eight flat faces. The corners catch the ball for more spin and control.", pick: "you want more spin than round but less harshness than square.", effect: "In the scores: a solid spin and control boost, with slightly less power and comfort.", d: { p: -2, c: 3, s: 9, cf: -3, d: -2 } },
+    square: { name: "Square", short: "square", note: "Four sharp edges that dig into the ball. Most spin, a flat low-power response and a firm feel.", pick: "you swing fast and long and want heavy topspin that still lands in.", effect: "In the scores: the biggest spin boost, with noticeably less power, comfort and string life.", d: { p: -5, c: 5, s: 14, cf: -6, d: -6 } },
+    twisted: { name: "Twisted", short: "twisted", note: "Edges spiral along the string. Bites like a shaped string but plays livelier.", pick: "you want edge-driven spin with more comfort and pop than a square string.", effect: "In the scores: a large spin boost with comfort and power about level, and slightly shorter life.", d: { p: 2, c: 2, s: 10, cf: 2, d: -3 } }
+  };
+  var shapeKeys = ["round", "textured", "multi", "square", "twisted"];
+  function shapeD(s, key, w) {
+    if (!POLY[s.mains]) return 0;
+    var d = (SHAPES[s.shape] || SHAPES.round).d[key];
+    return d * (s.hybrid ? w : 1);
+  }
+  function effShape(s) { return POLY[s.mains] ? (s.shape || "round") : "round"; }
+  function shapeIcon(key, cx, cy, r, fill) {
+    var i, a, pts = [], o = "";
+    if (key === "round") return '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="' + fill + '"/>';
+    if (key === "textured") {
+      o = '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r * 0.82).toFixed(1) + '" fill="' + fill + '"/>';
+      for (i = 0; i < 10; i++) { a = i * Math.PI / 5; o += '<circle cx="' + (cx + Math.cos(a) * r * 0.98).toFixed(1) + '" cy="' + (cy + Math.sin(a) * r * 0.98).toFixed(1) + '" r="' + (r * 0.17).toFixed(1) + '" fill="' + fill + '"/>'; }
+      return o;
+    }
+    if (key === "multi") { for (i = 0; i < 8; i++) { a = i * Math.PI / 4 + Math.PI / 8; pts.push((cx + Math.cos(a) * r).toFixed(1) + "," + (cy + Math.sin(a) * r).toFixed(1)); } return '<polygon points="' + pts.join(" ") + '" fill="' + fill + '"/>'; }
+    if (key === "square") { var q = r * 0.86; return '<rect x="' + (cx - q).toFixed(1) + '" y="' + (cy - q).toFixed(1) + '" width="' + (q * 2).toFixed(1) + '" height="' + (q * 2).toFixed(1) + '" fill="' + fill + '"/>'; }
+    for (i = 0; i < 12; i++) { a = i * Math.PI / 6 + 0.35; var rr = i % 2 === 0 ? r * 1.05 : r * 0.62; pts.push((cx + Math.cos(a) * rr).toFixed(1) + "," + (cy + Math.sin(a) * rr).toFixed(1)); }
+    return '<polygon points="' + pts.join(" ") + '" fill="' + fill + '"/>';
+  }
+
+  var RACKETS = [
+    { name: "Traditional player’s", head: 95,  weight: 320, balance: 315, ra: 62, beam: 20, pattern: "18x20" },
+    { name: "Modern player’s",      head: 100, weight: 305, balance: 322, ra: 66, beam: 23, pattern: "16x19" },
+    { name: "Tweener",              head: 102, weight: 295, balance: 330, ra: 66, beam: 24, pattern: "16x19" },
+    { name: "Power",                head: 110, weight: 255, balance: 343, ra: 69, beam: 27, pattern: "16x19" }
+  ];
+  var STRINGS = [
+    { name: "Soft and lively",       mains: "gut",    crosses: "gut",    hybrid: false, gauge: 1.30, tension: 53 },
+    { name: "Arm-friendly",          mains: "multi",  crosses: "multi",  hybrid: false, gauge: 1.30, tension: 54 },
+    { name: "Control",               mains: "poly",   crosses: "poly",   hybrid: false, gauge: 1.25, tension: 52 },
+    { name: "Spin",                  mains: "poly",   crosses: "poly",   hybrid: false, gauge: 1.25, tension: 50, shape: "square" },
+    { name: "Poly mains, gut crosses", mains: "copoly", crosses: "gut",  hybrid: true,  gauge: 1.25, tension: 51 }
+  ];
+
+  var AXES = [
+    { k: "power",     n: "Power" },
+    { k: "forgive",   n: "Forgiveness" },
+    { k: "comfort",   n: "Comfort" },
+    { k: "maneuver",  n: "Maneuverability" },
+    { k: "stability", n: "Stability" },
+    { k: "control",   n: "Control" },
+    { k: "spin",      n: "Spin" }
+  ];
+  var ORDER = ["power", "control", "spin", "comfort", "stability", "maneuver", "forgive"];
+  var NAME = {}; AXES.forEach(function (a) { NAME[a.k] = a.n; });
+
+  var SLIDERS = [
+    { k: "head", sec: "racket", label: "Head size", min: 85, max: 115, step: 1,
+      fmt: function (v) { return "<b>" + v + "</b>sq in"; },
+      tag: function (v) { return v <= 95 ? "Midsize" : v <= 99 ? "Small midplus" : v <= 104 ? "Large midplus" : "Oversize"; },
+      desc: "The hitting area. Bigger heads add power and a larger sweet spot. Smaller heads suit players who want control." },
+    { k: "weight", sec: "racket", label: "Weight (unstrung)", min: 225, max: 340, step: 1,
+      fmt: function (v) { return "<b>" + v + "</b>g (" + (v / 28.35).toFixed(1) + " oz)"; },
+      tag: function (v) { return v <= 270 ? "Light" : v <= 312 ? "Medium" : "Heavy"; },
+      desc: "Heavier frames feel steadier and absorb shock. Lighter frames are easier to swing." },
+    { k: "balance", sec: "racket", label: "Balance point", min: 300, max: 360, step: 1,
+      fmt: function (v) { return "<b>" + v + "</b>mm from the butt"; },
+      tag: function (v) { var p = (343 - v) / 3.175; return Math.abs(p) < 1 ? "Even balance" : Math.abs(p).toFixed(1) + " points " + (p > 0 ? "head-light" : "head-heavy"); },
+      desc: "Head-light is easier to swing. Head-heavy adds plow-through. Measured for a standard 27 in frame." },
+    { k: "ra", sec: "racket", label: "Stiffness (RA)", min: 55, max: 75, step: 1,
+      fmt: function (v) { return "<b>" + v + "</b>RA"; },
+      tag: function (v) { return v <= 63 ? "Flexible" : v <= 67 ? "Medium" : "Stiff"; },
+      desc: "Stiffer frames take less energy from the ball, so they add power, but they pass more shock to the arm." },
+    { k: "beam", sec: "racket", label: "Beam width", min: 18, max: 30, step: 1,
+      fmt: function (v) { return "<b>" + v + "</b>mm"; },
+      tag: function (v) { return v < 22 ? "Thin" : v <= 26 ? "Medium" : "Thick"; },
+      desc: "Thicker beams are usually stiffer and more powerful. Thin beams give more feel." },
+    { k: "gauge", sec: "string", label: "Gauge (thickness)", min: 1.10, max: 1.40, step: 0.05,
+      fmt: function (v) { return "<b>" + v.toFixed(2) + "</b>mm"; },
+      tag: function (v) { return "About " + GAUGE[v.toFixed(2)] + " gauge"; },
+      desc: "Thinner strings add spin, feel and power but break sooner. Thicker strings last longer." },
+    { k: "tension", sec: "string", label: "Tension", min: 40, max: 65, step: 1,
+      fmt: function (v) { return "<b>" + v + "</b>lb (" + (v * 0.4536).toFixed(1) + " kg)"; },
+      tag: function (v) { return v < 47 ? "Low tension" : v <= 56 ? "Mid tension" : "High tension"; },
+      desc: "Lower tension adds power and a softer feel. Higher tension adds control. Check your frame’s recommended range." }
+  ];
+
+  /* ---------- state ---------- */
+  var state = {
+    page: "guide", view: "drawing", mIdx: 0, searched: false, active: "A", compare: false, sweet: true, balance: true,
+    setups: {
+      A: { label: "Custom", edited: false, sLabel: null, sEdited: false, head: 100, weight: 300, balance: 320, ra: 65, beam: 23, pattern: "16x19", shape: "round", mains: "multi",  crosses: "multi",  hybrid: false, gauge: 1.30, tension: 54 },
+      B: { label: "Custom", edited: false, sLabel: null, sEdited: false, head: 100, weight: 300, balance: 320, ra: 65, beam: 23, pattern: "16x19", shape: "round", mains: "copoly", crosses: "copoly", hybrid: false, gauge: 1.25, tension: 50 }
+    }
+  };
+  var cur = function () { return state.setups[state.active]; };
+
+  /* ---------- model ---------- */
+  function racketDerived(s) {
+    var m = s.weight / 1000;
+    var dcg = s.balance / 10;
+    var sw = m * (Math.pow(dcg - 10, 2) + 580 + (s.head - 100) * 3);
+    return { sw: sw, pts: (343 - s.balance) / 3.175 };
+  }
+
+  function mix(s, attr, wm) {
+    var M = MATERIALS[s.mains][attr], C = MATERIALS[s.crosses][attr];
+    return wm * M + (1 - wm) * C;
+  }
+
+  function evaluate(s) {
+    var d = racketDerived(s);
+    var h = norm(s.head, 85, 115), w = norm(s.weight, 230, 340), sw = norm(d.sw, 260, 390);
+    var ra = norm(s.ra, 55, 75), bm = norm(s.beam, 18, 30), o = OPEN[s.pattern], bal = norm(s.balance, 300, 360);
+
+    var r = {
+      power:    100 * (0.28 * h + 0.18 * sw + 0.18 * ra + 0.16 * bm + 0.12 * o + 0.08 * bal),
+      control:  100 * (0.22 * (1 - h) + 0.18 * (1 - bm) + 0.18 * (1 - o) + 0.14 * (1 - ra) + 0.18 * sw + 0.10 * w),
+      maneuver: 100 * (0.55 * (1 - sw) + 0.25 * (1 - w) + 0.20 * (1 - bal)),
+      stability:100 * (0.60 * sw + 0.30 * w + 0.10 * h),
+      comfort:  100 * (0.40 * (1 - ra) + 0.30 * w + 0.20 * (1 - bm) + 0.10 * h),
+      spin:     100 * (0.60 * o + 0.30 * h + 0.10 * (1 - w)),
+      forgive:  100 * (0.40 * h + 0.30 * sw + 0.20 * bm + 0.10 * w)
+    };
+
+    var t = (s.tension - 52) / 10;
+    var g0 = (s.gauge - 1.25) / 0.15;
+    var st = {
+      power:   (mix(s, "p", 0.55) + shapeD(s, "p", 0.55)) - 11 * t - 6 * g0,
+      control: (mix(s, "c", 0.65) + shapeD(s, "c", 0.65)) + 9 * t + 2 * g0,
+      spin:    (mix(s, "s", 0.75) + shapeD(s, "s", 0.75)) - 3 * t - 7 * g0,
+      comfort: (mix(s, "cf", 0.5) + shapeD(s, "cf", 0.5)) - 9 * t - 4 * g0,
+      life:    (mix(s, "d", 0.55) + shapeD(s, "d", 0.55)) + 22 * g0,
+      hold:    mix(s, "t", 0.6) + 5 * g0
+    };
+    Object.keys(st).forEach(function (k) { st[k] = clamp(st[k], 5, 98, 0); });
+
+    var raw = {
+      power:    0.55 * r.power + 0.45 * st.power,
+      control:  0.40 * r.control + 0.60 * st.control,
+      spin:     0.40 * r.spin + 0.60 * st.spin,
+      comfort:  0.50 * r.comfort + 0.50 * st.comfort,
+      stability: r.stability,
+      maneuver: r.maneuver,
+      forgive:  0.85 * r.forgive + 0.15 * st.power
+    };
+    var axes = {};
+    Object.keys(raw).forEach(function (k) { axes[k] = Math.round(clamp(8 + raw[k] * 0.9, 5, 98)); });
+
+    return {
+      axes: axes,
+      life: Math.round(clamp(8 + st.life * 0.9, 5, 98)),
+      hold: Math.round(clamp(8 + st.hold * 0.9, 5, 98)),
+      sw: d.sw, pts: d.pts,
+      strung: s.weight + 16
+    };
+  }
+
+  /* ---------- drawing: racket ---------- */
+  function racketSVG(s, ev) {
+    var W = 240, H = 520, cx = 120, sc = 17.5, y0 = 24;
+    var area = s.head * 1.2;
+    var A = Math.sqrt(1.25 * 4 * area / Math.PI) * sc;
+    var B = A / 1.25;
+    var f = s.beam * 0.55;
+    var cy = y0 + f / 2 + A / 2;
+    var rx = B / 2, ry = A / 2;
+    var irx = rx - f / 2, iry = ry - f / 2;
+    var buttY = y0 + 27 * sc;
+    var handleTop = buttY - 7.3 * sc;
+    var hw = 10;
+    var th = 34 * Math.PI / 180;
+    var tx = rx * Math.sin(th), ty = cy + ry * Math.cos(th);
+
+    var parts = s.pattern.split("x");
+    var M = parseInt(parts[0], 10), C = parseInt(parts[1], 10);
+    var sw = (s.gauge * 1.0 + 0.1).toFixed(2);
+    var cM = MATERIALS[s.mains].color, cC = MATERIALS[s.crosses].color;
+
+    var out = "";
+    out += '<svg class="racketSvg" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Racket drawn in proportion: ' + s.head + ' square inch head, ' + s.pattern.replace("x", " by ") + ' string pattern">';
+    out += '<defs><clipPath id="sbClip"><ellipse cx="' + cx + '" cy="' + cy.toFixed(1) + '" rx="' + irx.toFixed(1) + '" ry="' + iry.toFixed(1) + '"/></clipPath>';
+    out += '<radialGradient id="sweetG"><stop offset="0" stop-color="#D6E22E" stop-opacity="0.85"/><stop offset="1" stop-color="#D6E22E" stop-opacity="0.18"/></radialGradient></defs>';
+
+    /* court lines */
+    out += '<g fill="none" stroke="#fff" stroke-opacity="0.3" stroke-width="2">';
+    out += '<rect x="12" y="10" width="216" height="498" rx="4"/>';
+    out += '<line x1="12" y1="' + (H - 150) + '" x2="228" y2="' + (H - 150) + '"/>';
+    out += '</g>';
+
+    /* strings */
+    out += '<g clip-path="url(#sbClip)" stroke-linecap="butt">';
+    var j, i, x, y;
+    for (j = 0; j < C; j++) {
+      y = cy - iry + (j + 0.5) * (2 * iry / C);
+      out += '<line x1="' + (cx - irx - 2).toFixed(1) + '" y1="' + y.toFixed(1) + '" x2="' + (cx + irx + 2).toFixed(1) + '" y2="' + y.toFixed(1) + '" stroke="' + cC + '" stroke-width="' + sw + '" stroke-opacity="0.92"/>';
+    }
+    for (i = 0; i < M; i++) {
+      x = cx - irx + (i + 0.5) * (2 * irx / M);
+      out += '<line x1="' + x.toFixed(1) + '" y1="' + (cy - iry - 2).toFixed(1) + '" x2="' + x.toFixed(1) + '" y2="' + (cy + iry + 2).toFixed(1) + '" stroke="' + cM + '" stroke-width="' + sw + '"/>';
+    }
+    out += '</g>';
+
+    /* sweet spot */
+    if (state.sweet) {
+      var k = 0.28 + 0.40 * (ev.axes.forgive / 100);
+      out += '<ellipse cx="' + cx + '" cy="' + (cy - iry * 0.06).toFixed(1) + '" rx="' + (irx * k).toFixed(1) + '" ry="' + (iry * k * 0.95).toFixed(1) + '" fill="url(#sweetG)" stroke="#D6E22E" stroke-width="1.5" stroke-dasharray="4 3"/>';
+    }
+
+    /* frame, throat, handle */
+    out += '<ellipse cx="' + cx + '" cy="' + cy.toFixed(1) + '" rx="' + rx.toFixed(1) + '" ry="' + ry.toFixed(1) + '" fill="none" stroke="#F4F6F2" stroke-width="' + f.toFixed(1) + '"/>';
+    out += '<path d="M ' + (cx - tx).toFixed(1) + ' ' + ty.toFixed(1) + ' Q ' + (cx - hw - 6) + ' ' + ((ty + handleTop) / 2).toFixed(1) + ' ' + (cx - hw) + ' ' + handleTop.toFixed(1) + ' L ' + (cx + hw) + ' ' + handleTop.toFixed(1) + ' Q ' + (cx + hw + 6) + ' ' + ((ty + handleTop) / 2).toFixed(1) + ' ' + (cx + tx).toFixed(1) + ' ' + ty.toFixed(1) + '" fill="none" stroke="#F4F6F2" stroke-width="' + Math.max(7, f * 0.7).toFixed(1) + '" stroke-linejoin="round" stroke-linecap="round"/>';
+    out += '<rect x="' + (cx - hw) + '" y="' + handleTop.toFixed(1) + '" width="' + (hw * 2) + '" height="' + (buttY - handleTop).toFixed(1) + '" rx="4" fill="#0E1D31"/>';
+    for (var gy = handleTop + 8; gy < buttY - 6; gy += 9) {
+      out += '<line x1="' + (cx - hw) + '" y1="' + (gy + 5).toFixed(1) + '" x2="' + (cx + hw) + '" y2="' + gy.toFixed(1) + '" stroke="#fff" stroke-opacity="0.18" stroke-width="1.2"/>';
+    }
+
+    /* balance */
+    if (state.balance) {
+      var yBal = buttY - (s.balance / 25.4) * sc;
+      var yEven = buttY - 13.5 * sc;
+      var headLight = yBal >= yEven;
+      out += '<line x1="12" y1="' + yEven.toFixed(1) + '" x2="228" y2="' + yEven.toFixed(1) + '" stroke="#fff" stroke-opacity="0.8" stroke-width="1.4" stroke-dasharray="5 4"/>';
+      out += '<line x1="12" y1="' + yBal.toFixed(1) + '" x2="228" y2="' + yBal.toFixed(1) + '" stroke="#D6E22E" stroke-width="2.2"/>';
+      out += '<text x="18" y="' + (headLight ? yEven - 5 : yEven + 13).toFixed(1) + '">Even balance</text>';
+      out += '<text x="222" text-anchor="end" y="' + (headLight ? yBal + 14 : yBal - 5).toFixed(1) + '" style="fill:#D6E22E">This frame</text>';
+    }
+    out += '</svg>';
+    return out;
+  }
+
+  /* ---------- drawing: racket comparison ---------- */
+  function geo(s) {
+    var sc = 17.5, y0 = 24;
+    var A = Math.sqrt(1.25 * 4 * (s.head * 1.2) / Math.PI) * sc;
+    var B = A / 1.25, f = s.beam * 0.55, cy = y0 + f / 2 + A / 2, rx = B / 2, ry = A / 2;
+    var th = 34 * Math.PI / 180;
+    return { sc: sc, y0: y0, f: f, cy: cy, rx: rx, ry: ry, irx: rx - f / 2, iry: ry - f / 2,
+      tx: rx * Math.sin(th), ty: cy + ry * Math.cos(th), buttY: y0 + 27 * sc };
+  }
+
+  function racketSVGCompare(sA, evA, sB, evB) {
+    var W = 240, H = 520, cx = 120, hw = 10, NAVY = "#0E1D31", CA = "#FF9A3C", CB = "#86D9A8";
+    var gA = geo(sA), gB = geo(sB);
+    var act = state.active === "B" ? sB : sA, ga = state.active === "B" ? gB : gA;
+    var handleTop = gA.buttY - 7.3 * gA.sc;
+    var f1 = function (n) { return n.toFixed(1); };
+    var out = '<svg class="racketSvg" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Two rackets overlaid: A as a solid orange frame, B as a green outline">';
+    out += '<defs><clipPath id="sbClip"><ellipse cx="' + cx + '" cy="' + f1(ga.cy) + '" rx="' + f1(ga.irx) + '" ry="' + f1(ga.iry) + '"/></clipPath>' +
+      '<radialGradient id="sweetA"><stop offset="0" stop-color="' + CA + '" stop-opacity="0.65"/><stop offset="1" stop-color="' + CA + '" stop-opacity="0.12"/></radialGradient>' +
+      '<radialGradient id="sweetB"><stop offset="0" stop-color="' + CB + '" stop-opacity="0.6"/><stop offset="1" stop-color="' + CB + '" stop-opacity="0.12"/></radialGradient></defs>';
+    out += '<g fill="none" stroke="#fff" stroke-opacity="0.3" stroke-width="2"><rect x="12" y="10" width="216" height="498" rx="4"/><line x1="12" y1="' + (H - 150) + '" x2="228" y2="' + (H - 150) + '"/></g>';
+
+    /* strings of the option being edited */
+    var parts = act.pattern.split("x"), M = parseInt(parts[0], 10), C = parseInt(parts[1], 10);
+    var sw = (act.gauge * 1.0 + 0.1).toFixed(2), cM = MATERIALS[act.mains].color, cC = MATERIALS[act.crosses].color, i, j, x, y;
+    out += '<g clip-path="url(#sbClip)" opacity="0.7">';
+    for (j = 0; j < C; j++) { y = ga.cy - ga.iry + (j + 0.5) * (2 * ga.iry / C); out += '<line x1="' + f1(cx - ga.irx - 2) + '" y1="' + f1(y) + '" x2="' + f1(cx + ga.irx + 2) + '" y2="' + f1(y) + '" stroke="' + cC + '" stroke-width="' + sw + '"/>'; }
+    for (i = 0; i < M; i++) { x = cx - ga.irx + (i + 0.5) * (2 * ga.irx / M); out += '<line x1="' + f1(x) + '" y1="' + f1(ga.cy - ga.iry - 2) + '" x2="' + f1(x) + '" y2="' + f1(ga.cy + ga.iry + 2) + '" stroke="' + cM + '" stroke-width="' + sw + '"/>'; }
+    out += '</g>';
+
+    /* sweet spots: navy underlay keeps each outline readable */
+    if (state.sweet) {
+      [[gA, evA, "sweetA", CA, ""], [gB, evB, "sweetB", CB, ' stroke-dasharray="7 5"']].forEach(function (q) {
+        var k = 0.28 + 0.40 * (q[1].axes.forgive / 100), cyy = q[0].cy - q[0].iry * 0.06;
+        var dims = ' cx="' + cx + '" cy="' + f1(cyy) + '" rx="' + f1(q[0].irx * k) + '" ry="' + f1(q[0].iry * k * 0.95) + '"';
+        out += '<ellipse' + dims + ' fill="url(#' + q[2] + ')" stroke="' + NAVY + '" stroke-opacity="0.7" stroke-width="5.5"/>';
+        out += '<ellipse' + dims + ' fill="none" stroke="' + q[3] + '" stroke-width="2.6"' + q[4] + '/>';
+      });
+    }
+
+    /* racket A: solid light-blue band with a navy edge */
+    var thr = function (g) { return 'M ' + f1(cx - g.tx) + ' ' + f1(g.ty) + ' Q ' + (cx - hw - 6) + ' ' + f1((g.ty + handleTop) / 2) + ' ' + (cx - hw) + ' ' + f1(handleTop) + ' L ' + (cx + hw) + ' ' + f1(handleTop) + ' Q ' + (cx + hw + 6) + ' ' + f1((g.ty + handleTop) / 2) + ' ' + f1(cx + g.tx) + ' ' + f1(g.ty); };
+    var twA = Math.max(7, gA.f * 0.7);
+    out += '<ellipse cx="' + cx + '" cy="' + f1(gA.cy) + '" rx="' + f1(gA.rx) + '" ry="' + f1(gA.ry) + '" fill="none" stroke="' + NAVY + '" stroke-width="' + f1(gA.f + 6) + '"/>';
+    out += '<path d="' + thr(gA) + '" fill="none" stroke="' + NAVY + '" stroke-width="' + f1(twA + 6) + '" stroke-linejoin="round" stroke-linecap="round"/>';
+    out += '<ellipse cx="' + cx + '" cy="' + f1(gA.cy) + '" rx="' + f1(gA.rx) + '" ry="' + f1(gA.ry) + '" fill="none" stroke="' + CA + '" stroke-width="' + f1(gA.f) + '"/>';
+    out += '<path d="' + thr(gA) + '" fill="none" stroke="' + CA + '" stroke-width="' + f1(twA) + '" stroke-linejoin="round" stroke-linecap="round"/>';
+    out += '<rect x="' + (cx - hw) + '" y="' + f1(handleTop) + '" width="' + (hw * 2) + '" height="' + f1(gA.buttY - handleTop) + '" rx="4" fill="' + NAVY + '" stroke="' + CA + '" stroke-width="1.5"/>';
+
+    /* racket B: hollow green outline, drawn over A so it always shows */
+    var edge = function (rx, ry, cy) {
+      var d = ' cx="' + cx + '" cy="' + f1(cy) + '" rx="' + f1(rx) + '" ry="' + f1(ry) + '" fill="none"';
+      return '<ellipse' + d + ' stroke="' + NAVY + '" stroke-width="7"/><ellipse' + d + ' stroke="' + CB + '" stroke-width="3"/>';
+    };
+    out += edge(gB.rx + gB.f / 2, gB.ry + gB.f / 2, gB.cy) + edge(Math.max(2, gB.rx - gB.f / 2), Math.max(2, gB.ry - gB.f / 2), gB.cy);
+    out += '<path d="' + thr(gB) + '" fill="none" stroke="' + NAVY + '" stroke-width="7" stroke-linejoin="round"/><path d="' + thr(gB) + '" fill="none" stroke="' + CB + '" stroke-width="3" stroke-linejoin="round"/>';
+
+    /* balance points */
+    if (state.balance) {
+      var yA = gA.buttY - (sA.balance / 25.4) * gA.sc, yB = gB.buttY - (sB.balance / 25.4) * gB.sc, yE = gA.buttY - 13.5 * gA.sc;
+      var anyHeavy = Math.min(yA, yB) < yE;
+      var ln = function (yy, col, dash) {
+        return '<line x1="12" y1="' + f1(yy) + '" x2="228" y2="' + f1(yy) + '" stroke="' + NAVY + '" stroke-opacity="0.7" stroke-width="5.5"/><line x1="12" y1="' + f1(yy) + '" x2="228" y2="' + f1(yy) + '" stroke="' + col + '" stroke-width="2.6"' + (dash ? ' stroke-dasharray="7 4"' : '') + '/>';
+      };
+      out += '<line x1="12" y1="' + f1(yE) + '" x2="228" y2="' + f1(yE) + '" stroke="#fff" stroke-opacity="0.8" stroke-width="1.4" stroke-dasharray="5 4"/>';
+      out += ln(yA, CA, false) + ln(yB, CB, true);
+      out += '<text x="18" y="' + f1(anyHeavy ? yE + 13 : yE - 5) + '">Even balance</text>';
+      var tstyle = ' text-anchor="middle" style="fill:' + NAVY + ';stroke:none;font-size:11px;font-weight:700"';
+      out += '<circle cx="200" cy="' + f1(yA) + '" r="9" fill="' + CA + '" stroke="' + NAVY + '" stroke-width="1.8"/><text x="200" y="' + f1(yA + 4) + '"' + tstyle + '>A</text>';
+      out += '<rect x="210" y="' + f1(yB - 9) + '" width="18" height="18" rx="4" fill="' + CB + '" stroke="' + NAVY + '" stroke-width="1.8"/><text x="219" y="' + f1(yB + 4) + '"' + tstyle + '>B</text>';
+    }
+    return out + '</svg>';
+  }
+
+  /* ---------- drawing: radar ---------- */
+  function radarSVG(vA, vB, axes, names) {
+    axes = axes || AXES;
+    var cx = 180, cy = 150, R = 104, N = axes.length;
+    var ang = function (i) { return -Math.PI / 2 + i * 2 * Math.PI / N; };
+    var pt = function (i, v) { return [cx + R * v / 100 * Math.cos(ang(i)), cy + R * v / 100 * Math.sin(ang(i))]; };
+    var poly = function (vals) { return axes.map(function (a, i) { var p = pt(i, vals[a.k]); return p[0].toFixed(1) + "," + p[1].toFixed(1); }).join(" "); };
+    var out = '<svg class="radarSvg" viewBox="0 0 360 ' + (state.compare ? 322 : 302) + '" role="img" aria-label="Radar chart of seven measures for the current options">';
+    [25, 50, 75, 100].forEach(function (lv) {
+      out += '<polygon class="grid" points="' + axes.map(function (a, i) { var p = pt(i, lv); return p[0].toFixed(1) + "," + p[1].toFixed(1); }).join(" ") + '"/>';
+    });
+    axes.forEach(function (a, i) {
+      var p = pt(i, 100);
+      out += '<line class="spoke" x1="' + cx + '" y1="' + cy + '" x2="' + p[0].toFixed(1) + '" y2="' + p[1].toFixed(1) + '"/>';
+    });
+    var showA = state.compare || state.active === "A";
+    var showBpoly = state.compare || state.active === "B";
+    if (showA) out += '<polygon class="rA" points="' + poly(vA) + '"/>';
+    if (showBpoly) out += '<polygon class="rB" points="' + poly(vB) + '"/>';
+    axes.forEach(function (a, i) {
+      var p;
+      if (showA) { p = pt(i, vA[a.k]); out += '<circle class="vA" cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="3.2"/>'; }
+      if (showBpoly) { p = pt(i, vB[a.k]); out += '<circle class="vB" cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="3.2"/>'; }
+      var lx = cx + (R + 14) * Math.cos(ang(i)), ly = cy + (R + 14) * Math.sin(ang(i));
+      var c = Math.cos(ang(i)), sn = Math.sin(ang(i));
+      var anchor = c > 0.3 ? "start" : c < -0.3 ? "end" : "middle";
+      var dy = sn > 0.5 ? 10 : sn < -0.5 ? -2 : 4;
+      out += '<text x="' + lx.toFixed(1) + '" y="' + (ly + dy).toFixed(1) + '" text-anchor="' + anchor + '">' + a.n + '</text>';
+    });
+    names = names || {};
+    if (names.A && names.A === names.B) names = { A: names.A + " (A)", B: names.B + " (B)" };
+    var esc = function (t) { return String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;"); };
+    var trunc = function (t) { t = String(t || ""); return t.length > 44 ? t.slice(0, 43) + "…" : t; };
+    var rows = [];
+    if (showA) rows.push([names.A || "Option A", 'style="stroke:var(--a);stroke-width:2.4"']);
+    if (showBpoly) rows.push([names.B || "Option B", 'style="stroke:var(--b);stroke-width:2.4;stroke-dasharray:6 3"']);
+    rows.forEach(function (r, i) {
+      var y = 294 + i * 20;
+      out += '<line x1="28" y1="' + y + '" x2="54" y2="' + y + '" ' + r[1] + '/><text x="62" y="' + (y + 4) + '"><title>' + esc(r[0]) + '</title>' + esc(trunc(r[0])) + '</text>';
+    });
+    out += '</svg>';
+    return out;
+  }
+
+  /* ---------- scoreboard ---------- */
+  function boardHTML(evA, evB) {
+    var cmp = state.compare;
+    var act = state.active;
+    var cls = cmp ? "bRow" : "bRow single";
+    var h = '<div class="' + cls + ' head"><span>Measure</span>';
+    if (cmp) h += '<span class="bNum a"><i class="dot"></i>A</span><span class="bNum b"><i class="dot"></i>B</span>';
+    else h += '<span class="bNum ' + (act === "A" ? "a" : "b") + '"><i class="dot"></i>' + act + '</span>';
+    h += '</div>';
+    var row = function (name, a, b, gap) {
+      var s = '<div class="' + cls + (gap ? " gap" : "") + '"><span class="bName">' + name + '</span>';
+      if (cmp) {
+        s += '<span class="bNum' + (a > b ? " lead" : "") + '">' + a + '</span><span class="bNum b' + (b > a ? " lead" : "") + '">' + b + '</span>';
+      } else {
+        var v = act === "A" ? a : b;
+        s += '<span class="bNum ' + (act === "B" ? "b" : "") + '">' + v + '</span>';
+      }
+      return s + '</div>';
+    };
+    ORDER.forEach(function (k) { h += row(NAME[k], evA.axes[k], evB.axes[k], false); });
+    return h;
+  }
+
+  /* ---------- gauges ---------- */
+  function gaugeCalc(o, who) {
+    var pos = function (v) { return clamp((v - o.min) / (o.max - o.min) * 100, 0, 100); };
+    var pv = pos(o.value), cur = null, segs = "", labs = "", plain = "";
+    o.zones.forEach(function (z, i) {
+      var a = pos(z[0]), b = pos(z[1]);
+      var last = i === o.zones.length - 1;
+      var on = pv >= a && (pv < b || (last && pv <= b));
+      if (on) cur = z;
+      segs += '<i class="g-seg' + (on ? " on" : "") + '" style="left:calc(' + a.toFixed(2) + '% + 1px);width:calc(' + (b - a).toFixed(2) + '% - 2px)"></i>';
+      labs += '<span class="g-lab' + (on ? " on" : "") + '" style="width:' + (b - a).toFixed(2) + '%"><b>' + z[2] + '</b>' + z[4] + '</span>';
+      plain += '<span class="g-lab on" style="width:' + (b - a).toFixed(2) + '%"><b>' + z[2] + '</b>' + z[4] + '</span>';
+    });
+    if (!cur) cur = o.zones[o.zones.length - 1];
+    var track = '<div class="g-track" role="img" aria-label="' + (who ? "Option " + who + ", " : "") + o.name + ': ' + o.label + ', ' + cur[2] + '. Typical: ' + o.benchText + '">' + segs +
+      '<i class="g-tick" style="left:' + pos(o.bench).toFixed(2) + '%" title="Typical: ' + o.benchText + '"></i><i class="g-dot' + (who ? " " + who.toLowerCase() : "") + '" style="left:' + pv.toFixed(2) + '%"></i></div>';
+    return { cur: cur, labs: labs, plain: plain, track: track };
+  }
+  function chipHTML(z) { return '<span class="g-chip' + (z[3] ? " out" : "") + '">' + z[2] + '</span>'; }
+
+  function gauge(o) {
+    var c = gaugeCalc(o);
+    return '<div class="g"><div class="g-top"><span class="g-name">' + o.name + chipHTML(c.cur) + '</span><span class="g-val">' + o.text + '</span></div>' + c.track + '<div class="g-labs">' + c.labs + '</div></div>';
+  }
+
+  function gaugePair(a, b) {
+    var ca = gaugeCalc(a, "A"), cb = gaugeCalc(b, "B");
+    var row = function (w, o, c) {
+      return '<div class="g-top g-row"><span class="g-name"><span class="who ' + w.toLowerCase() + '">' + w + '</span>' + chipHTML(c.cur) + '</span><span class="g-val">' + o.text + '</span></div>' + c.track;
+    };
+    return '<div class="g gp"><div class="gp-title">' + a.name + '</div>' + row("A", a, ca) + row("B", b, cb) + '<div class="g-labs">' + ca.plain + '</div></div>';
+  }
+
+  function specDefs(s, ev) {
+    var oz = ev.strung / 28.35, pts = ev.pts, idx = PATTERNS.indexOf(s.pattern);
+    return [
+      { name: "Head size", text: s.head + "<small>sq in</small>", label: s.head + " square inches", min: 90, max: 110, value: s.head, bench: 100, benchText: "100 sq in",
+        zones: [[90, 95.5, "Midsize", 1, "85–95"], [95.5, 99.5, "Small midplus", 0, "96–99"], [99.5, 104.5, "Large midplus", 0, "100–104"], [104.5, 110, "Oversize", 1, "105+"]] },
+      { name: "Strung weight", text: ev.strung + "<small>g (" + oz.toFixed(1) + " oz)</small>", label: ev.strung + " grams strung", min: 240, max: 360, value: ev.strung, bench: 298, benchText: "298 g",
+        zones: [[240, 270, "Light", 1, "under 270 g"], [270, 312, "Medium", 0, "270–312 g"], [312, 340, "Heavy", 0, "312–340 g"], [340, 360, "Very heavy", 1, "340+ g"]] },
+      { name: "Balance point", text: (Math.abs(pts) < 1 ? "Even" : Math.abs(pts).toFixed(1) + "<small>pts " + (pts > 0 ? "HL" : "HH") + "</small>"), label: Math.abs(pts).toFixed(1) + " points " + (pts > 0 ? "head-light" : "head-heavy") + ", " + s.balance + " millimeters", min: 14, max: -5.5, value: pts, bench: 0, benchText: "even balance",
+        zones: [[14, 8, "Extra head-light", 1, "8+ pts HL"], [8, 3, "Head-light", 0, "3–8 pts HL"], [3, -1, "Near even", 0, "3 HL to 1 HH"], [-1, -5.5, "Head-heavy", 1, "1+ pts HH"]] },
+      { name: "Stiffness (RA)", text: s.ra + "<small>RA</small>", label: s.ra + " RA", min: 55, max: 75, value: s.ra, bench: 66, benchText: "66 RA",
+        zones: [[55, 63.5, "Flexible", 1, "63 and below"], [63.5, 67.5, "Medium", 0, "64–67"], [67.5, 75, "Stiff", 1, "68 and up"]] },
+      { name: "String pattern", text: s.pattern.replace("x", "×"), label: s.pattern.replace("x", " by "), min: 0, max: 4, value: idx + 0.5, bench: 1.5, benchText: "16×19",
+        zones: [[0, 1, "Very open", 1, "16×18"], [1, 2, "Open", 0, "16×19"], [2, 3, "Medium", 0, "16×20"], [3, 4, "Dense", 1, "18×20"]] }
+    ];
+  }
+
+  function gaugesHTML(sA, evA, sB, evB) {
+    if (state.compare) {
+      var da = specDefs(sA, evA), db = specDefs(sB, evB);
+      return da.map(function (o, i) { return gaugePair(o, db[i]); }).join("");
+    }
+    var s = state.active === "A" ? sA : sB, ev = state.active === "A" ? evA : evB;
+    return specDefs(s, ev).map(gauge).join("");
+  }
+
+  /* ---------- strings-only views ---------- */
+  var STR_AXES = [{ k: "power", n: "Power" }, { k: "control", n: "Control" }, { k: "spin", n: "Spin" }, { k: "comfort", n: "Comfort" }, { k: "life", n: "String life" }, { k: "hold", n: "Holds tension" }];
+
+  function stringOnly(s) {
+    var t = (s.tension - 52) / 10, g0 = (s.gauge - 1.25) / 0.15;
+    var st = {
+      power: (mix(s, "p", 0.55) + shapeD(s, "p", 0.55)) - 11 * t - 6 * g0,
+      control: (mix(s, "c", 0.65) + shapeD(s, "c", 0.65)) + 9 * t + 2 * g0,
+      spin: (mix(s, "s", 0.75) + shapeD(s, "s", 0.75)) - 3 * t - 7 * g0,
+      comfort: (mix(s, "cf", 0.5) + shapeD(s, "cf", 0.5)) - 9 * t - 4 * g0,
+      life: (mix(s, "d", 0.55) + shapeD(s, "d", 0.55)) + 22 * g0,
+      hold: mix(s, "t", 0.6) + 5 * g0
+    };
+    Object.keys(st).forEach(function (k) { st[k] = Math.round(clamp(8 + clamp(st[k], 5, 98) * 0.9, 5, 98)); });
+    return st;
+  }
+
+  function stringShort(s) {
+    if (s.sLabel) return s.sLabel + (s.sEdited ? " (edited)" : "") + ", " + s.tension + " lb";
+    var m = MATERIALS, es = effShape(s), sh = es !== "round" ? " (" + SHAPES[es].short + ")" : "";
+    var mat = s.hybrid && s.mains !== s.crosses ? m[s.mains].name + sh + " / " + m[s.crosses].name : m[s.mains].name + sh;
+    return mat + ", " + s.gauge.toFixed(2) + " mm, " + s.tension + " lb";
+  }
+
+  function stringName(s) {
+    if (s.sLabel) return s.sLabel + (s.sEdited ? " (edited)" : "") + ", " + s.tension + " lb";
+    var m = MATERIALS;
+    var sh = effShape(s) !== "round" ? " (" + SHAPES[effShape(s)].short + ")" : "";
+    var mat = s.hybrid && s.mains !== s.crosses ? m[s.mains].name + sh + " mains, " + m[s.crosses].name + " crosses" : m[s.mains].name + sh;
+    return mat + ", " + s.gauge.toFixed(2) + " mm, " + s.tension + " lb";
+  }
+
+  function weave(s, ox, oy, w, hgt, tag) {
+    var NAVY = "#0E1D31", n = 5, sx = w / n, rows = Math.max(3, Math.floor(hgt / sx)), sy = hgt / rows;
+    var lw = (3 + (s.gauge - 1.10) / 0.30 * 9) * (hgt < 150 ? 0.75 : 1);
+    var cM = MATERIALS[s.mains].color, cC = MATERIALS[s.crosses].color, o = "", i, j, x, y;
+    o += '<rect x="' + ox + '" y="' + oy + '" width="' + w + '" height="' + hgt + '" rx="12" fill="' + NAVY + '" fill-opacity="0.55"/>';
+    var seg = function (x1, y1, x2, y2, col) {
+      return '<line x1="' + x1.toFixed(1) + '" y1="' + y1.toFixed(1) + '" x2="' + x2.toFixed(1) + '" y2="' + y2.toFixed(1) + '" stroke="' + NAVY + '" stroke-opacity="0.65" stroke-width="' + (lw + 3).toFixed(1) + '" stroke-linecap="round"/>' +
+        '<line x1="' + x1.toFixed(1) + '" y1="' + y1.toFixed(1) + '" x2="' + x2.toFixed(1) + '" y2="' + y2.toFixed(1) + '" stroke="' + col + '" stroke-width="' + lw.toFixed(1) + '" stroke-linecap="round"/>';
+    };
+    for (j = 0; j < rows; j++) { y = oy + sy * (j + 0.5); o += seg(ox + 8, y, ox + w - 8, y, cC); }
+    for (i = 0; i < n; i++) { x = ox + sx * (i + 0.5); o += seg(x, oy + 8, x, oy + hgt - 8, cM); }
+    for (i = 0; i < n; i++) for (j = 0; j < rows; j++) {
+      if ((i + j) % 2 === 0) { x = ox + sx * (i + 0.5); y = oy + sy * (j + 0.5); o += seg(x - lw / 2 - 3, y, x + lw / 2 + 3, y, cC); }
+    }
+    var es = effShape(s), ir = 8 + (s.gauge - 1.10) / 0.30 * 4, bx = ox + w - 46, by = oy + hgt - 46;
+    o += '<rect x="' + bx + '" y="' + by + '" width="38" height="38" rx="9" fill="' + NAVY + '" fill-opacity="0.85" stroke="#fff" stroke-opacity="0.35"/>' + shapeIcon(es, bx + 19, by + 19, ir, cM);
+    if (tag) {
+      var col = tag === "A" ? "#FF9A3C" : "#86D9A8", tstyle = ' text-anchor="middle" style="fill:' + NAVY + ';stroke:none;font-size:11px;font-weight:700"';
+      o += tag === "A"
+        ? '<circle cx="' + (ox + 14) + '" cy="' + (oy + 14) + '" r="9" fill="' + col + '" stroke="' + NAVY + '" stroke-width="1.8"/><text x="' + (ox + 14) + '" y="' + (oy + 18) + '"' + tstyle + '>A</text>'
+        : '<rect x="' + (ox + 5) + '" y="' + (oy + 5) + '" width="18" height="18" rx="4" fill="' + col + '" stroke="' + NAVY + '" stroke-width="1.8"/><text x="' + (ox + 14) + '" y="' + (oy + 18) + '"' + tstyle + '>B</text>';
+    }
+    return o;
+  }
+
+  function stringSVG(sA, sB) {
+    var cmp = state.compare, H = cmp ? 300 : 260;
+    var out = '<svg class="racketSvg" viewBox="0 0 240 ' + H + '" role="img" aria-label="Close-up of the string weave, line thickness shows gauge">';
+    if (cmp) out += weave(sA, 14, 10, 212, 132, "A") + weave(sB, 14, 158, 212, 132, "B");
+    else { var s = state.active === "B" ? sB : sA; out += weave(s, 14, 10, 212, 240, null); }
+    return out + '</svg>';
+  }
+
+  function stringSpecDefs(s) {
+    var gl = GAUGE[s.gauge.toFixed(2)];
+    return [
+      { name: "Gauge (thickness)", text: s.gauge.toFixed(2) + "<small>mm (" + gl + ")</small>", label: s.gauge.toFixed(2) + " millimeters, about " + gl + " gauge", min: 1.05, max: 1.45, value: s.gauge, bench: 1.25, benchText: "1.25 mm (16L)",
+        zones: [[1.05, 1.225, "Thin", 1, "1.10–1.20 mm"], [1.225, 1.325, "Medium", 0, "1.25–1.30 mm"], [1.325, 1.45, "Thick", 1, "1.35+ mm"]] },
+      { name: "Tension", text: s.tension + "<small>lb (" + (s.tension * 0.4536).toFixed(1) + " kg)</small>", label: s.tension + " pounds", min: 40, max: 65, value: s.tension, bench: 52, benchText: "52 lb",
+        zones: [[40, 46.5, "Low", 1, "under 47 lb"], [46.5, 56.5, "Mid", 0, "47–56 lb"], [56.5, 65, "High", 1, "57+ lb"]] }
+    ];
+  }
+
+  function stringGaugesHTML(sA, sB) {
+    if (state.compare) {
+      var da = stringSpecDefs(sA), db = stringSpecDefs(sB);
+      return da.map(function (o, i) { return gaugePair(o, db[i]); }).join("");
+    }
+    return stringSpecDefs(state.active === "A" ? sA : sB).map(gauge).join("");
+  }
+
+  function boardRows(rows, vA, vB) {
+    var cmp = state.compare, act = state.active, cls = cmp ? "bRow" : "bRow single";
+    var h = '<div class="' + cls + ' head"><span>Strings only</span>';
+    if (cmp) h += '<span class="bNum a"><i class="dot"></i>A</span><span class="bNum b"><i class="dot"></i>B</span>';
+    else h += '<span class="bNum ' + (act === "A" ? "a" : "b") + '"><i class="dot"></i>' + act + '</span>';
+    h += '</div>';
+    rows.forEach(function (r) {
+      var a = vA[r.k], b = vB[r.k];
+      h += '<div class="' + cls + '"><span class="bName">' + r.n + '</span>';
+      if (cmp) h += '<span class="bNum' + (a > b ? " lead" : "") + '">' + a + '</span><span class="bNum b' + (b > a ? " lead" : "") + '">' + b + '</span>';
+      else h += '<span class="bNum ' + (act === "B" ? "b" : "") + '">' + (act === "A" ? a : b) + '</span>';
+      h += '</div>';
+    });
+    return h;
+  }
+
+  function readChartHTML(onStr) {
+    var terms = onStr ? [
+      ["Power", "How much ball speed the stringbed gives back for a given swing."],
+      ["Control", "How predictable the direction and depth are."],
+      ["Spin", "How easily the strings grip and brush the ball."],
+      ["Comfort", "How little shock the strings pass to your arm."],
+      ["String life", "How long the strings last before they break or go dead."],
+      ["Holds tension", "How well the strings keep their tension as you play."]
+    ] : [
+      ["Power", "How much ball speed you get for a given swing."],
+      ["Control", "How predictable the direction and depth are."],
+      ["Spin", "How easily the stringbed grips and brushes the ball."],
+      ["Comfort", "How little shock reaches your arm."],
+      ["Stability", "How well the frame resists twisting and being pushed back."],
+      ["Maneuverability", "How easy the frame is to swing and adjust."],
+      ["Forgiveness", "How well off-center hits still perform."]
+    ];
+    var note = onStr
+      ? "These scores describe the strings and tension on their own, before any frame is added. They come from this tool’s own rules of thumb, so use them to compare options with each other, not as measured data."
+      : "Each spec nudges these measures in the direction Tennis Warehouse describes. How big each nudge is comes from this tool’s own rules of thumb, so use the chart to compare options with each other, not as measured data.";
+    return '<h2 class="gh2">Reading the chart</h2><p class="sub">' + terms.length + ' measures, each scored from low to high.</p><div class="terms">' +
+      terms.map(function (t) { return '<div class="term"><b>' + t[0] + '</b>' + t[1] + '</div>'; }).join("") + '</div><p class="fine" style="margin:12px 0 0">' + note + '</p>';
+  }
+
+  function describeStrings(sA, sB) {
+    var s = state.active === "A" ? sA : sB, name = state.active, sc = stringOnly(s);
+    var entries = STR_AXES.map(function (a) { return { k: a.k, n: a.n.toLowerCase(), v: sc[a.k] }; }).sort(function (x, y) { return y.v - x.v; });
+    var html = "<h2>Option " + name + " strings in plain terms</h2>";
+    html += "<p>These strings lean toward " + entries[0].n + " and " + entries[1].n + ", and give up the most on " + entries[entries.length - 1].n + ".</p>";
+    var suit = null;
+    if (sc.spin >= 72 && sc.control >= 66) suit = "players who swing fast and want heavy topspin that still lands in";
+    else if (sc.comfort >= 66 && sc.power >= 62) suit = "players who want a soft, lively stringbed with easy depth";
+    else if (sc.life >= 72) suit = "players who break strings often";
+    if (suit) html += "<p>This kind of setup tends to suit " + suit + ".</p>";
+    if (state.compare) {
+      var a = stringOnly(sA), b = stringOnly(sB);
+      var diffs = STR_AXES.map(function (x) { return { n: x.n, d: b[x.k] - a[x.k] }; }).filter(function (x) { return Math.abs(x.d) >= 4; })
+        .sort(function (x, y) { return Math.abs(y.d) - Math.abs(x.d); }).slice(0, 4);
+      html += diffs.length
+        ? '<p><span class="diff">B compared with A:</span> ' + diffs.map(function (x) { return x.n + " " + (x.d > 0 ? "+" : "−") + Math.abs(x.d); }).join(", ") + ".</p>"
+        : "<p>Options A and B score within a few points of each other on every string measure.</p>";
+    }
+    var w = [], polyMains = !!POLY[s.mains], polyBoth = polyMains && !!POLY[s.crosses];
+    if (polyBoth && s.tension >= 55) w.push("Full polyester at high tension is a firm, low-power stringbed that is hard on the arm. Dropping the tension a few pounds, or pairing polyester with a soft cross string, takes some of the sting out.");
+    if (polyMains) w.push("Polyester loses tension quickly, even while the strings still look fine. Restring more often than you would with gut or multifilament.");
+    if (s.tension < 44 || s.tension > 60) w.push("That tension is outside the usual 45 to 60 lb range. Check the range printed on your frame’s throat before stringing.");
+    if (sc.life < 35) w.push("This string choice wears out fast, especially if you hit with a lot of spin.");
+    if (polyMains && effShape(s) === "square") w.push("Square strings bite hardest but feel firmest and lose playability sooner than round ones.");
+    w = w.slice(0, 4);
+    html += '<ul class="flags">' + (w.length ? w.map(function (x) { return "<li>" + x + "</li>"; }).join("") : '<li class="ok">No red flags in this combination.</li>') + "</ul>";
+    return html;
+  }
+
+  /* ---------- text ---------- */
+  function describe(s, ev, name) {
+    var entries = ORDER.map(function (k) { return { k: k, n: NAME[k].toLowerCase(), v: ev.axes[k] }; });
+    var sorted = entries.slice().sort(function (x, y) { return y.v - x.v; });
+    var a = ev.axes;
+    var html = "<h2>Option " + name + " in plain terms</h2>";
+    html += "<p>It leans toward " + sorted[0].n + " and " + sorted[1].n + ", and gives up the most on " + sorted[sorted.length - 1].n + ".</p>";
+    var suit = null;
+    if (a.control >= 62 && a.stability >= 55) suit = "players with fast, full swings who want precision";
+    else if (a.power >= 60 && a.forgive >= 60) suit = "players who want help generating pace";
+    else if (a.spin >= 68) suit = "heavy topspin baseliners";
+    else if (a.comfort >= 66 && a.maneuver >= 55) suit = "players who want something easy on the arm and quick to swing";
+    if (suit) html += "<p>This kind of setup tends to suit " + suit + ".</p>";
+
+    if (state.compare) {
+      var evA = evaluate(state.setups.A), evB = evaluate(state.setups.B);
+      var diffs = ORDER.map(function (k) { return { n: NAME[k], d: evB.axes[k] - evA.axes[k] }; })
+        .filter(function (x) { return Math.abs(x.d) >= 4; })
+        .sort(function (x, y) { return Math.abs(y.d) - Math.abs(x.d); })
+        .slice(0, 4);
+      if (diffs.length) {
+        html += '<p><span class="diff">B compared with A:</span> ' + diffs.map(function (x) { return x.n + " " + (x.d > 0 ? "+" : "−") + Math.abs(x.d); }).join(", ") + ".</p>";
+      } else {
+        html += "<p>Options A and B score within a few points of each other on every measure.</p>";
+      }
+    }
+
+    var w = [];
+    var mp = !!POLY[s.mains], cp = !!POLY[s.crosses];
+    if (s.ra >= 67 && mp && cp && s.tension >= 55) w.push("A stiff frame, full polyester and high tension is a hard combination on the arm. Dropping the tension a few pounds, or pairing polyester with a soft cross string, takes some of the sting out.");
+    if (s.ra >= 68 && s.weight <= 285 && s.tension >= 56) w.push("A light, stiff frame strung tight sends the most shock to the arm. Lower tension, a softer string or a heavier frame all reduce it.");
+    if (s.ra >= 67) w.push("Tennis Warehouse suggests that anyone with arm or shoulder trouble look at frames rated 66 or lower.");
+    if (ev.sw >= 350 && s.weight >= 325) w.push("A heavy frame with a high swingweight is stable but tiring over a long match. Make sure you can still swing it fast late in a set.");
+    if (mp) w.push("Polyester loses tension quickly, even while the strings still look fine. Restring more often than you would with gut or multifilament.");
+    if (s.tension < 44 || s.tension > 60) w.push("That tension is outside the usual 45 to 60 lb range. Check the range printed on your frame’s throat before stringing.");
+    if (ev.life < 35) w.push("This string choice wears out fast, especially if you hit with a lot of spin.");
+    w = w.slice(0, 4);
+    html += '<ul class="flags">' + (w.length ? w.map(function (x) { return "<li>" + x + "</li>"; }).join("") : '<li class="ok">No red flags in this combination.</li>') + "</ul>";
+    return html;
+  }
+
+  /* ---------- controls ---------- */
+  function buildSliders() {
+    ["racket", "string"].forEach(function (sec) {
+      var el = $(sec === "racket" ? "#racketSliders" : "#stringSliders");
+      el.innerHTML = SLIDERS.filter(function (d) { return d.sec === sec; }).map(function (d) {
+        return '<div class="ctl"><div class="ctlHead"><label for="in-' + d.k + '">' + d.label + '</label><output id="out-' + d.k + '"></output></div>' +
+          '<div class="sl"><input type="range" id="in-' + d.k + '" min="' + d.min + '" max="' + d.max + '" step="' + d.step + '">' +
+          (d.sec === "racket" ? '<i class="ovBand" id="band-' + d.k + '" hidden></i><i class="ovMark" id="mark-' + d.k + '" hidden></i>' : '') + '</div>' +
+          (d.sec === "racket" ? '<div class="fit" id="fit-' + d.k + '"></div>' : '') +
+          '<span class="tag" id="tag-' + d.k + '"></span><p class="why">' + d.desc + '</p></div>';
+      }).join("");
+    });
+    SLIDERS.forEach(function (d) {
+      $("#in-" + d.k).addEventListener("input", function (e) {
+        cur()[d.k] = parseFloat(e.target.value);
+        if (d.sec === "racket") cur().edited = true;
+        else if (d.k === "gauge") cur().sEdited = true;
+        update();
+      });
+    });
+  }
+
+  function buildPatterns() {
+    var el = $("#patternSeg");
+    el.innerHTML = PATTERNS.map(function (p) {
+      return '<button type="button" role="radio" data-p="' + p + '" aria-checked="false">' + p.replace("x", "×") + "</button>";
+    }).join("");
+    el.addEventListener("click", function (e) {
+      var b = e.target.closest("button"); if (!b) return;
+      cur().pattern = b.dataset.p; cur().edited = true; update();
+    });
+  }
+
+  function buildMats(el, part) {
+    el.innerHTML = Object.keys(MATERIALS).map(function (k) {
+      var m = MATERIALS[k];
+      return '<button type="button" class="mat" role="radio" aria-checked="false" data-m="' + k + '"><span class="sw"><i style="background:' + m.color + '"></i></span><span><b>' + m.name + '</b><small>' + m.note + '</small><small class="pick"><i>Pick it if</i> ' + m.pick + '</small></span></button>';
+    }).join("");
+    el.addEventListener("click", function (e) {
+      var b = e.target.closest("button"); if (!b) return;
+      var s = cur();
+      if (part === "mains") { s.mains = b.dataset.m; if (!s.hybrid) s.crosses = b.dataset.m; }
+      else s.crosses = b.dataset.m;
+      s.sEdited = true;
+      update();
+    });
+  }
+
+  function buildShapes() {
+    var el = $("#shapes");
+    el.innerHTML = shapeKeys.map(function (k) {
+      return '<button type="button" class="mat" role="radio" aria-checked="false" data-sh="' + k + '"><span class="sw"><svg viewBox="0 0 38 26" width="38" height="26" aria-hidden="true">' + shapeIcon(k, 19, 13, 8.5, "#F4F6F2") + '</svg></span><span><b>' + SHAPES[k].name + '</b><small>' + SHAPES[k].note + '</small><small class="pick"><i>Pick it if</i> ' + SHAPES[k].pick + '</small></span></button>';
+    }).join("");
+    el.addEventListener("click", function (e) {
+      var b = e.target.closest("button"); if (!b || b.disabled) return;
+      cur().shape = b.dataset.sh; cur().sEdited = true; update();
+    });
+  }
+
+  function buildPresets() {
+    $("#racketPresets").innerHTML = RACKETS.map(function (r, i) { return '<button type="button" class="pre" data-r="' + i + '">' + r.name + "</button>"; }).join("");
+    $("#stringPresets").innerHTML = STRINGS.map(function (r, i) { return '<button type="button" class="pre" data-s="' + i + '">' + r.name + "</button>"; }).join("");
+    $("#racketPresets").addEventListener("click", function (e) {
+      var b = e.target.closest("button"); if (!b) return;
+      var p = RACKETS[+b.dataset.r], s = cur();
+      ["head", "weight", "balance", "ra", "beam", "pattern"].forEach(function (k) { s[k] = p[k]; });
+      s.label = p.name + " preset"; s.edited = false;
+      update(true);
+    });
+    $("#stringPresets").addEventListener("click", function (e) {
+      var b = e.target.closest("button"); if (!b) return;
+      var p = STRINGS[+b.dataset.s], s = cur();
+      ["mains", "crosses", "hybrid", "gauge", "tension"].forEach(function (k) { s[k] = p[k]; });
+      s.shape = p.shape || "round";
+      s.sLabel = null; s.sEdited = false;
+      update(true);
+    });
+  }
+
+  function syncControls(setValues) {
+    var s = cur();
+    SLIDERS.forEach(function (d) {
+      var inp = $("#in-" + d.k);
+      if (setValues) inp.value = s[d.k];
+      var v = s[d.k];
+      $("#out-" + d.k).innerHTML = d.fmt(v);
+      $("#tag-" + d.k).textContent = d.tag(v);
+      inp.style.setProperty("--p", ((v - d.min) / (d.max - d.min) * 100) + "%");
+    });
+    Array.prototype.forEach.call($("#patternSeg").children, function (b) { b.setAttribute("aria-checked", b.dataset.p === s.pattern ? "true" : "false"); });
+    $("#patOut").textContent = s.pattern.replace("x", "×") + " (" + (OPEN[s.pattern] > 0.85 ? "very open" : OPEN[s.pattern] > 0.6 ? "open" : OPEN[s.pattern] > 0.3 ? "medium" : "dense") + ")";
+    $("#hybridChk").checked = s.hybrid;
+    $("#crossWrap").hidden = !s.hybrid;
+    $("#matLabel1").textContent = s.hybrid ? "Mains (vertical strings)" : "String";
+    Array.prototype.forEach.call($("#mats1").children, function (b) { b.setAttribute("aria-checked", b.dataset.m === s.mains ? "true" : "false"); });
+    Array.prototype.forEach.call($("#mats2").children, function (b) { b.setAttribute("aria-checked", b.dataset.m === s.crosses ? "true" : "false"); });
+    var polyMains = !!POLY[s.mains];
+    Array.prototype.forEach.call($("#shapes").children, function (b) { b.setAttribute("aria-checked", b.dataset.sh === (s.shape || "round") ? "true" : "false"); b.disabled = !polyMains; });
+    $("#shapeLabel").textContent = s.hybrid ? "String shape (mains)" : "String shape";
+    $("#shapeNote").textContent = polyMains ? SHAPES[s.shape || "round"].effect : "Shape options apply to polyester strings. Choose polyester for the mains to use them. Until then the strings count as round.";
+    $("#panel").classList.toggle("isB", state.active === "B");
+    document.documentElement.style.setProperty("--cur", state.active === "B" ? "var(--b)" : "var(--a)");
+    Array.prototype.forEach.call($("#setupSeg").children, function (b) { b.setAttribute("aria-pressed", b.dataset.setup === state.active ? "true" : "false"); });
+  }
+
+  /* ---------- render ---------- */
+  function render() {
+    var sA = state.setups.A, sB = state.setups.B;
+    var evA = evaluate(sA), evB = evaluate(sB);
+    var s = cur(), ev = state.active === "A" ? evA : evB;
+
+    var onStr = state.page === "strings";
+    $("#racketChips").hidden = onStr;
+    $("#stringBoard").hidden = !onStr;
+    $("#board").hidden = onStr; $("#swNote").hidden = onStr;
+    var nm = function (k) { var x = state.setups[k]; return x.label && x.label !== "Custom" ? x.label + (x.edited ? " (edited)" : "") : "Custom racket"; };
+    var who = function (k, text) { return '<div class="whoLine"><span class="who ' + k.toLowerCase() + '">' + k + '</span><span>' + text + '</span></div>'; };
+    var lab = function (k) { return onStr ? stringName(state.setups[k]) : nm(k); };
+    $("#whoRow").innerHTML = state.compare ? who("A", lab("A")) + who("B", lab("B")) : who(state.active, lab(state.active));
+    if (onStr) {
+      $("#racketMount").innerHTML = stringSVG(sA, sB);
+      $("#cmpNote").textContent = state.compare ? "Line thickness shows gauge. The top weave is Option A and the bottom is Option B." : "Line thickness shows gauge.";
+      $("#stats").innerHTML = stringGaugesHTML(sA, sB);
+      $("#gcap").textContent = "Each bar is split into labeled zones. Typical: 1.25 mm (16L) at 52 lb. A yellow label flags an unusual value.";
+      $("#stringBoard").innerHTML = boardRows(STR_AXES, stringOnly(sA), stringOnly(sB));
+    } else {
+      lastRacketSVG = state.compare ? racketSVGCompare(sA, evA, sB, evB) : racketSVG(s, ev);
+      $("#racketMount").innerHTML = lastRacketSVG;
+      $("#cmpNote").textContent = state.compare ? "A is the solid orange frame and B is the green outline. Strings are drawn for Option " + state.active + "." : "";
+      $("#stats").innerHTML = gaugesHTML(sA, evA, sB, evB);
+      $("#gcap").textContent = "Each bar is split into labeled zones. Typical: 100 sq in, 298 g strung, even balance, 66 RA, 16×19. A yellow label flags an unusual value.";
+    }
+    $("#zoomBar").hidden = onStr;
+    var chartView = state.view === "chart";
+    $("#courtCard").hidden = chartView; $("#resultCard").hidden = !chartView;
+    $("#buildLayout").classList.toggle("chartMode", chartView);
+    var vk = $("#viewSeg").children;
+    Array.prototype.forEach.call(vk, function (b) { b.setAttribute("aria-pressed", b.dataset.view === state.view ? "true" : "false"); });
+    if (vk[0]) vk[0].textContent = onStr ? "Strings" : "Racket";
+    $("#whoRow2").innerHTML = $("#whoRow").innerHTML;
+    $("#readChart").innerHTML = readChartHTML(onStr);
+    $("#buildLayout").classList.toggle("solo", state.page === "racket");
+    renderBuilder();
+    lastWho = $("#whoRow").innerHTML; lastNote = $("#cmpNote").textContent;
+    if (!onStr) { applyViews(); renderModal(); }
+    var swb = function (x) { return Math.round(x) + " (" + (x <= 305 ? "low" : x <= 325 ? "medium" : "high") + ")"; };
+    $("#swNote").textContent = "Estimated swingweight: A " + swb(evA.sw) + ", B " + swb(evB.sw) + ". Tennis Warehouse calls 305 and below low, 310 to 325 medium and above 325 high.";
+    var radar = radarSVG(evA.axes, evB.axes, null, { A: nm("A"), B: nm("B") });
+    $("#radarMount").innerHTML = onStr ? radarSVG(stringOnly(sA), stringOnly(sB), STR_AXES, { A: stringShort(sA), B: stringShort(sB) }) : radar;
+    $("#board").innerHTML = boardHTML(evA, evB);
+  }
+
+  function update(setValues) {
+    syncControls(!!setValues);
+    render();
+  }
+
+  /* ---------- wiring ---------- */
+  buildSliders();
+  buildPatterns();
+  buildMats($("#mats1"), "mains");
+  buildMats($("#mats2"), "crosses");
+  buildShapes();
+  buildPresets();
+
+  $("#findBtn").addEventListener("click", function () {
+    state.searched = true; state.mIdx = 0; renderBuilder();
+    var mp = $("#mPanel"); if (mp.scrollIntoView) mp.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+  $("#hideMatches").addEventListener("click", function () {
+    state.searched = false; renderBuilder();
+    var c = $("#racketCard"); if (c.scrollIntoView) c.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+  $("#mTabs").addEventListener("click", function (e) {
+    var b = e.target.closest(".mTab"); if (!b) return;
+    state.mIdx = +b.dataset.i; renderBuilder();
+  });
+  $("#viewSeg").addEventListener("click", function (e) {
+    var b = e.target.closest("button"); if (!b) return;
+    state.view = b.dataset.view; render();
+  });
+  $("#setupSeg").addEventListener("click", function (e) {
+    var b = e.target.closest("button"); if (!b) return;
+    state.active = b.dataset.setup;
+    update(true);
+  });
+  $("#compareChk").addEventListener("change", function (e) { state.compare = e.target.checked; update(); });
+  $("#sweetChk").addEventListener("change", function (e) { state.sweet = e.target.checked; render(); });
+  $("#balChk").addEventListener("change", function (e) { state.balance = e.target.checked; render(); });
+  $("#hybridChk").addEventListener("change", function (e) {
+    var s = cur(); s.hybrid = e.target.checked; s.sEdited = true;
+    if (!s.hybrid) s.crosses = s.mains;
+    update();
+  });
+
+  var RACKET_DB = [
+    {"b": "Babolat", "m": "Pure Drive", "y": "2025", "head": 100, "len": 27, "g": 318, "oz": 11.2, "pts": 4, "bal": 12.99, "sw": 317, "ra": 69, "beam": "23 / 26 / 23", "pat": "16x19", "url": "https://www.tennis-warehouse.com/Babolat_Pure_Drive_2025/descpage-BPD25R.html", "pros": {"k": "family", "n": ["Giovanni Mpetschi Perricard", "James Duckworth"], "x": ""}, "tldr": "Easy power, spin and a big sweet spot, with a firm, lively feel. The 69 RA frame is hard on sensitive arms and gives less touch than the control frames."},
+    {"b": "Babolat", "m": "Pure Drive Team", "y": "2025", "head": 100, "len": 27, "g": 301, "oz": 10.6, "pts": 5, "bal": 12.85, "sw": 308, "ra": 69, "beam": "23 / 26 / 23", "pat": "16x19", "url": "https://www.tennis-warehouse.com/Babolat_Pure_Drive_Team_2025/descpage-BRPTR.html", "pros": {"k": "club", "n": ["Giovanni Mpetschi Perricard", "James Duckworth"]}, "tldr": "A lighter, quicker Pure Drive with easy power and spin for rising intermediates. It is less stable against heavy pace and just as stiff (69 RA) on the arm."},
+    {"b": "Babolat", "m": "Pure Aero", "y": "2026", "head": 100, "len": 27, "g": 318, "oz": 11.2, "pts": 4, "bal": 12.99, "sw": 320, "ra": 66, "beam": "23 / 26 / 23", "pat": "16x19", "url": "https://www.tennis-warehouse.com/Babolat_Pure_Aero_2026/descpage-BPAR26.html", "pros": {"k": "family", "n": ["Alex Michelsen", "Botic van de Zandschulp", "Fábián Marozsán"], "x": "Carlos Alcaraz and Arthur Fils play the Aero 98."}, "tldr": "Built for heavy spin and fast racket-head speed, with easy launch from a 100 sq in head. It gives less free power than older Aeros, so you supply the pace."},
+    {"b": "Babolat", "m": "Pure Aero Team", "y": "2026", "head": 100, "len": 27, "g": 301, "oz": 10.6, "pts": 4, "bal": 13.0, "sw": 306, "ra": 66, "beam": "23 / 26 / 23", "pat": "16x19", "url": "https://www.tennis-warehouse.com/Babolat_Pure_Aero_Team_2026/descpage-BPAT26.html", "pros": {"k": "club", "n": ["Carlos Alcaraz", "Arthur Fils", "Félix Auger-Aliassime"]}, "tldr": "A lighter, faster Aero that makes spin and pace easy for rising intermediates. It is less stable than the full-weight Aero, and the firm frame can be tough on the arm."},
+    {"b": "Babolat", "m": "Pure Strike 98 16x19", "y": "2024", "head": 98, "len": 27, "g": 323, "oz": 11.4, "pts": 4, "bal": 13.0, "sw": 330, "ra": 64, "beam": "21 / 23 / 21", "pat": "16x19", "url": "https://www.tennis-warehouse.com/Babolat_Pure_Strike_98_16x19/descpage-PSRKT.html", "pros": {"k": "family", "n": ["Cameron Norrie", "Hamad Medjedovic"], "x": ""}, "tldr": "A stable, controllable 98 with enough pop and good feel for experienced players. It rewards full swings but is less forgiving, with a 330 swingweight to handle."},
+    {"b": "Babolat", "m": "Pure Strike 100 16x20", "y": "2024", "head": 100, "len": 27, "g": 323, "oz": 11.4, "pts": 7, "bal": 12.59, "sw": 320, "ra": 61, "beam": "21 / 23 / 21", "pat": "16x20", "url": "https://www.tennis-warehouse.com/descpageRCBABOLAT-PS1620.html", "pros": {"k": "family", "n": ["Cameron Norrie", "Hamad Medjedovic"], "x": ""}, "tldr": "More control and forgiveness than the 98, with a flexible frame (61 RA) and a dense pattern. It gives up some spin and free power to the Aero and Drive."},
+    {"b": "Head", "m": "Speed MP", "y": "2026", "head": 100, "len": 27, "g": 318, "oz": 11.2, "pts": 4, "bal": 13.0, "sw": 329, "ra": 60, "beam": "23 / 23 / 23", "pat": "16x19", "url": "https://www.tennis-warehouse.com/Head_Speed_MP_2026/descpage-HSPMP6.html", "pros": {"k": "family", "n": ["Jannik Sinner", "Novak Djokovic", "Rafael Jodar"], "x": "Sinner’s frame is customized, and Djokovic plays an older Radical mold."}, "tldr": "Controllable power, a plush flexible feel (60 RA) and a stable 329 swingweight. It offers less free power than a tweener and is demanding for slower swings."},
+    {"b": "Head", "m": "Extreme MP", "y": "2026", "head": 100, "len": 27, "g": 318, "oz": 11.2, "pts": 4, "bal": 12.99, "sw": 318, "ra": 67, "beam": "23 / 26 / 21", "pat": "16x19", "url": "https://www.tennis-warehouse.com/Head_Extreme_MP_Racquet/descpage-HREM26.html", "pros": {"k": "family", "n": ["Matteo Berrettini", "Jan-Lennard Struff", "Alejandro Davidovich Fokina", "Juan Manuel Cerundolo"], "x": ""}, "tldr": "A fast, spin-friendly frame with easy pace and a lively feel. The 67 RA beam is on the firm side, so it is less arm-friendly than the flexible frames."},
+    {"b": "Head", "m": "Extreme MP L", "y": "2026", "head": 100, "len": 27, "g": 295, "oz": 10.4, "pts": 4, "bal": 13.0, "sw": 307, "ra": 64, "beam": "23 / 26 / 21", "pat": "16x19", "url": "https://www.tennis-warehouse.com/Head_Extreme_MP_L_Racquet/descpage-HEMPL6.html", "pros": {"k": "club", "n": ["Matteo Berrettini", "Jan-Lennard Struff", "Alejandro Davidovich Fokina"]}, "tldr": "A lighter, easy-to-swing Extreme with plenty of spin and a softer 64 RA feel. The low swingweight (307) makes it less stable against heavy hitters."},
+    {"b": "Head", "m": "Radical Pro", "y": "2025", "head": 98, "len": 27, "g": 332, "oz": 11.7, "pts": 6, "bal": 12.75, "sw": 329, "ra": 65, "beam": "20 / 21.5 / 21", "pat": "16x19", "url": "https://www.tennis-warehouse.com/Head_Radical_Pro_2025/descpage-HPRR.html", "pros": {"k": "family", "n": ["Taylor Fritz", "Flavio Cobolli", "Matteo Arnaldi", "Nuno Borges"], "x": ""}, "tldr": "A stable, precise 98 with real plow-through and controllable power. At 332 g with low power, it is demanding for slower or shorter swings."},
+    {"b": "Head", "m": "PWR 110", "y": "", "head": 110, "len": 27.4, "g": 278, "oz": 9.8, "pts": -1, "bal": 13.8, "sw": 315, "ra": 65, "beam": "26 / 25 / 23", "pat": "16x19", "url": "https://www.tennis-warehouse.com/Head_PWR_110/descpage-HPWR10.html", "pros": {"k": "none", "n": []}, "tldr": "Easy power, a forgiving head and extended length at a light 278 g. It is not stable against pace and suits compact swings best."},
+    {"b": "Head", "m": "PWR 115", "y": "", "head": 115, "len": 27.7, "g": 244, "oz": 8.6, "pts": -9, "bal": 15.0, "sw": 312, "ra": 67, "beam": "29 / 29 / 29", "pat": "16x19", "url": "https://www.tennis-warehouse.com/Head_PWR_115/descpage-HPWR15.html", "pros": {"k": "none", "n": []}, "tldr": "Maximum power and forgiveness from a huge 115 head and extended length, at only 244 g. It is very light and head-heavy, so it is less stable and less precise."},
+    {"b": "Wilson", "m": "Blade 98 18x20 v10", "y": "", "head": 98, "len": 27, "g": 323, "oz": 11.4, "pts": 4, "bal": 13.0, "sw": 325, "ra": 61, "beam": "21.5 / 21.5 / 20.5", "pat": "18x20", "url": "https://www.tennis-warehouse.com/Wilson_Blade_98_18x20_v10/descpage-WB9818.html", "pros": {"k": "family", "n": ["Aryna Sabalenka", "Stefanos Tsitsipas", "Hubert Hurkacz", "Jakub Mensik"], "x": "Sabalenka is on the WTA tour; the others are ATP."}, "tldr": "The most control-oriented Blade, with a dense pattern, flexible feel and laser-like targeting. It gives little free spin or power, so you supply both."},
+    {"b": "Wilson", "m": "Clash 100 v3", "y": "", "head": 100, "len": 27, "g": 312, "oz": 11.0, "pts": 7, "bal": 12.59, "sw": 308, "ra": 54, "beam": "24.5 / 24.5 / 24.5", "pat": "16x19", "url": "https://www.tennis-warehouse.com/Wilson_Clash_100_v3/descpage-CL103V.html", "pros": {"k": "none", "n": []}, "tldr": "Very flexible (54 RA) and arm-friendly, with easy power and a plush feel. The flex gives less stability and plow-through against heavy pace."},
+    {"b": "Wilson", "m": "Pro Staff 97 v14", "y": "", "head": 97, "len": 27, "g": 332, "oz": 11.7, "pts": 7, "bal": 12.6, "sw": 325, "ra": 66, "beam": "21.5 / 21.5 / 21.5", "pat": "16x19", "url": "https://www.tennis-warehouse.com/descpageRCWILSON-W97V14.html", "pros": {"k": "family", "n": ["Jiri Lehecka"], "x": ""}, "tldr": "Precision, plow-through and a classic muted feel for strong players. It is heavy (332 g, 325 swingweight), low on power, and needs clean contact."},
+    {"b": "Wilson", "m": "Blade 98 16x19 v10", "y": "", "head": 98, "len": 27, "g": 323, "oz": 11.4, "pts": 4, "bal": 13.0, "sw": 322, "ra": 61, "beam": "21.5 / 21.5 / 20.5", "pat": "16x19", "url": "https://www.tennis-warehouse.com/Wilson_Blade_98_16x19_v10/descpage-WB9810.html", "pros": {"k": "family", "n": ["Stefanos Tsitsipas", "Hubert Hurkacz", "Jakub Mensik", "Ugo Humbert"], "x": ""}, "tldr": "Precision, feel and a flexible frame (61 RA) with a stable swingweight, favored on tour. It gives little free power and is less forgiving, so it suits fast swingers."},
+    {"b": "Wilson", "m": "Blade 100 v10", "y": "", "head": 100, "len": 27, "g": 318, "oz": 11.2, "pts": 4, "bal": 13.0, "sw": 319, "ra": 61, "beam": "22 / 22 / 22", "pat": "16x19", "url": "https://www.tennis-warehouse.com/Wilson_Blade_100_v10/descpage-WB1001.html", "pros": {"k": "family", "n": ["Stefanos Tsitsipas", "Hubert Hurkacz", "Jakub Mensik", "Ugo Humbert"], "x": ""}, "tldr": "A friendlier Blade with a bigger sweet spot, a flexible arm-friendly frame and good stability. It gives away a little spin and free power to looser-patterned 100s."},
+    {"b": "Wilson", "m": "Blade Pro 16x19 v10", "y": "", "head": 98, "len": 27, "g": 323, "oz": 11.4, "pts": 3, "bal": 13.18, "sw": 337, "ra": 61, "beam": "21.5 / 21.5 / 21.5", "pat": "16x19", "url": "https://www.tennis-warehouse.com/Wilson_Blade_Pro_98_16x19_v10/descpage-WB98P1.html", "pros": {"k": "family", "n": ["Stefanos Tsitsipas", "Hubert Hurkacz", "Jakub Mensik", "Ugo Humbert"], "x": ""}, "tldr": "A heavier, more stable Blade on a pro mold, with a 337 swingweight and flexible feel. It is demanding to swing and offers low power."},
+    {"b": "Wilson", "m": "Pro Staff 97L v14", "y": "", "head": 97, "len": 27, "g": 306, "oz": 10.8, "pts": 3, "bal": 13.12, "sw": 313, "ra": 68, "beam": "23.5 / 23.5 / 23.5", "pat": "16x19", "url": "https://www.tennis-warehouse.com/Wilson_Pro_Staff_97L_v14/descpage-97V14L.html", "pros": {"k": "club", "n": ["Jiri Lehecka"]}, "tldr": "A lighter, easier Pro Staff with the same precise 97 head. It is stiffer (68 RA) than the standard and less stable."},
+    {"b": "Wilson", "m": "Pro Staff 97UL v14", "y": "", "head": 97, "len": 27, "g": 283, "oz": 10.0, "pts": 4, "bal": 13.0, "sw": 301, "ra": 67, "beam": "23.5 / 23.5 / 23.5", "pat": "16x19", "url": "https://www.tennis-warehouse.com/Wilson_Pro_Staff_97UL_v14/descpage-9714UL.html", "pros": {"k": "club", "n": ["Jiri Lehecka"]}, "tldr": "An ultra-light Pro Staff that is easy to swing and learn on. It is less stable, with a small head and little power."},
+    {"b": "Wilson", "m": "Ultra 100 v5", "y": "", "head": 100, "len": 27, "g": 318, "oz": 11.2, "pts": 4, "bal": 13.0, "sw": 322, "ra": 67, "beam": "24 / 26.5 / 24.5", "pat": "16x18", "url": "https://www.tennis-warehouse.com/Wilson_Ultra_100_v5/descpage-WU1005.html", "pros": {"k": "family", "n": ["Alex de Minaur", "Learner Tien", "Coleman Wong", "Hugo Gaston"], "x": "De Minaur uses an Ultra Pro 99, and Tien an unreleased mold."}, "tldr": "Easy power and spin from a quick, forgiving 100 head. It is on the firm side (67 RA) and gives less control than denser frames."},
+    {"b": "Wilson", "m": "Ultra 100L v5", "y": "", "head": 100, "len": 27, "g": 295, "oz": 10.4, "pts": 4, "bal": 12.99, "sw": 310, "ra": 64, "beam": "24 / 26.5 / 24.5", "pat": "16x19", "url": "https://www.tennis-warehouse.com/Wilson_Ultra_100L_v5/descpage-WU10L5.html", "pros": {"k": "club", "n": ["Alex de Minaur", "Learner Tien", "Coleman Wong", "Hugo Gaston"]}, "tldr": "A lighter Ultra that makes power and spin easy for rising players. It is less stable against heavy pace."},
+    {"b": "Wilson", "m": "Ultra 99 Pro v5", "y": "", "head": 99, "len": 27, "g": 323, "oz": 11.4, "pts": 3, "bal": 13.17, "sw": 330, "ra": 69, "beam": "22 / 23.5 / 21.5", "pat": "16x18", "url": "https://www.tennis-warehouse.com/Wilson_Ultra_99_Pro_v5/descpage-WU99P5.html", "pros": {"k": "family", "n": ["Alex de Minaur", "Learner Tien", "Coleman Wong", "Hugo Gaston"], "x": "De Minaur plays an Ultra Pro 99."}, "tldr": "A reboot of the Ultra Pro with a stiff, tapered beam and an open 16×18 pattern for power, spin and a stable 330 swingweight. It is very firm (69 RA) and hard to maneuver, so it suits experienced players who can add weight where they want it."},
+    {"b": "Wilson", "m": "Clash 100L v3", "y": "", "head": 100, "len": 27, "g": 295, "oz": 10.4, "pts": 6, "bal": 12.79, "sw": 301, "ra": 54, "beam": "24.5 / 24.5 / 24.5", "pat": "16x19", "url": "https://www.tennis-warehouse.com/Wilson_Clash_100L_v3/descpage-CL1L3V.html", "pros": {"k": "none", "n": []}, "tldr": "The softest, easiest Clash: very arm-friendly and light to swing. The low swingweight (301) makes it less stable against big pace."},
+    {"b": "Wilson", "m": "Clash 100 Pro v3", "y": "", "head": 100, "len": 27, "g": 323, "oz": 11.4, "pts": 7, "bal": 12.59, "sw": 327, "ra": 57, "beam": "24.5 / 24.5 / 24.5", "pat": "16x20", "url": "https://www.tennis-warehouse.com/Wilson_Clash_100_Pro_v3/descpage-CL1P3V.html", "pros": {"k": "none", "n": []}, "tldr": "A heavier Clash with more stability while keeping a flexible, arm-friendly feel (57 RA). It takes more effort to swing and is less forgiving off-center."},
+    {"b": "Wilson", "m": "Defyer 98 Pro", "y": "", "head": 98, "len": 27, "g": 323, "oz": 11.4, "pts": 6, "bal": 12.75, "sw": 319, "ra": 64, "beam": "22 / 23.5 / 22", "pat": "16x20", "url": "https://www.tennis-warehouse.com/Wilson_Defyer_98_Pro_Racquet/descpage-WRL98.html", "alt": {"src": "Tennis Express", "url": "https://tennisexpress.com/collections/all/products/defyer-98-pro-v1-tennis-racquet", "sw": 323, "ra": 65}, "pros": {"k": "family", "n": ["Karen Khachanov", "Sebastian Korda", "Holger Rune", "Arthur Fery"], "x": ""}, "tldr": "Fast and spin-friendly, with a flexible feel (64 RA) and a dense 16×20 pattern for control. It is light for its size, so many players add weight for stability."},
+    {"b": "Wilson", "m": "Defyer 100", "y": "", "head": 100, "len": 27, "g": 318, "oz": 11.2, "pts": 6, "bal": 12.79, "sw": 326, "ra": 66, "beam": "23.8 / 25 / 23", "pat": "16x19", "url": "https://www.tennis-warehouse.com/Wilson_Defyer_100_Racquet/descpage-WRL100.html", "pros": {"k": "family", "n": ["Karen Khachanov", "Sebastian Korda", "Holger Rune", "Arthur Fery"], "x": ""}, "tldr": "Easy power and spin for a heavy ball, with more pop and margin than the 98 Pro. It can feel light and unstable, so it often benefits from added weight."},
+    {"b": "Wilson", "m": "Defyer 100L", "y": "", "head": 100, "len": 27, "g": 301, "oz": 10.6, "pts": 4, "bal": 13.0, "sw": 312, "ra": 65, "beam": "23.8 / 25 / 23", "pat": "16x19", "url": "https://www.tennis-warehouse.com/Wilson_Defyer_100L_Racquet/descpage-RL100L.html", "pros": {"k": "club", "n": ["Karen Khachanov", "Sebastian Korda", "Holger Rune", "Arthur Fery"]}, "tldr": "A lighter Defyer that gives spin and power with fast handling. It is less stable against pace."},
+    {"b": "Wilson", "m": "Defyer 100UL", "y": "", "head": 100, "len": 27, "g": 278, "oz": 9.8, "pts": 2, "bal": 13.19, "sw": 303, "ra": 65, "beam": "23.8 / 25 / 23", "pat": "16x19", "url": "https://www.tennis-warehouse.com/Wilson_Defyer_100UL_Racquet/descpageRCWILSON-WR10UL.html", "pros": {"k": "club", "n": ["Karen Khachanov", "Sebastian Korda", "Holger Rune", "Arthur Fery"]}, "tldr": "The lightest Defyer, very easy to swing and friendly for beginners and juniors. It has the least stability and little weight behind the ball."},
+    {"b": "Yonex", "m": "VCORE 98 8th Gen", "y": "2026", "head": 98, "len": 27, "g": 323, "oz": 11.4, "pts": 6, "bal": 12.79, "sw": 321, "ra": 63, "beam": "23 / 23.5 / 22", "pat": "16x19", "url": "https://www.tennis-warehouse.com/Yonex_VCORE_98_8th_Gen/descpage-VC988G.html", "pros": {"k": "family", "n": ["Tommy Paul", "João Fonseca", "Brandon Nakashima", "Denis Shapovalov"], "x": ""}, "tldr": "A spin-friendly 98 with a plush, lively feel and more precision than the 100. It is less forgiving and gives less free power."},
+    {"b": "Yonex", "m": "VCORE 98+ 8th Gen", "y": "2026", "head": 98, "len": 27.5, "g": 323, "oz": 11.4, "pts": 5, "bal": 13.18, "sw": 335, "ra": 63, "beam": "23 / 23.5 / 22", "pat": "16x19", "url": "https://www.tennis-warehouse.com/Yonex_VCORE_98_8th_Gen/descpage-VC9P8G.html", "pros": {"k": "family", "n": ["Tommy Paul", "João Fonseca", "Brandon Nakashima", "Denis Shapovalov"], "x": ""}, "tldr": "Extended length adds power and spin on a stable 335 swingweight. It is heavy to swing and less maneuverable."},
+    {"b": "Yonex", "m": "VCORE 100L 8th Gen", "y": "2026", "head": 100, "len": 27, "g": 295, "oz": 10.4, "pts": 1, "bal": 13.38, "sw": 313, "ra": 66, "beam": "24 / 26 / 23", "pat": "16x19", "url": "https://www.tennis-warehouse.com/Yonex_VCORE_100L_8th_Gen/descpage-VC1L8G.html", "pros": {"k": "club", "n": ["Tommy Paul", "João Fonseca", "Brandon Nakashima", "Denis Shapovalov"]}, "tldr": "A light, plush VCORE with fast handling and easy spin for rising players. It is less stable against heavy pace."},
+    {"b": "Yonex", "m": "VCORE 100D 8th Gen", "y": "2026", "head": 100, "len": 27, "g": 323, "oz": 11.4, "pts": 6, "bal": 12.79, "sw": 328, "ra": 66, "beam": "24 / 26 / 23", "pat": "16x20", "url": "https://www.tennis-warehouse.com/Yonex_VCORE_100D_8th_Gen/descpage-VC1D8G.html", "pros": {"k": "family", "n": ["Tommy Paul", "João Fonseca", "Brandon Nakashima", "Denis Shapovalov"], "x": ""}, "tldr": "A control-oriented 100: the 16×20 pattern adds precision while keeping the plush feel. It has a heavier swingweight (328) and less free pop than the standard 100."},
+    {"b": "Yonex", "m": "VCORE 100+ 8th Gen", "y": "2026", "head": 100, "len": 27.5, "g": 318, "oz": 11.2, "pts": 3, "bal": 13.38, "sw": 341, "ra": 65, "beam": "24 / 26 / 23", "pat": "16x19", "url": "https://www.tennis-warehouse.com/Yonex_VCORE_100_8th_Gen/descpage-VC1P8G.html", "pros": {"k": "family", "n": ["Tommy Paul", "João Fonseca", "Brandon Nakashima", "Denis Shapovalov"], "x": ""}, "tldr": "The most powerful VCORE, with extended length and a 341 swingweight for a heavy ball. It is hard to swing for long and needs a strong arm."},
+    {"b": "Yonex", "m": "EZONE 100", "y": "2025", "head": 100, "len": 27, "g": 318, "oz": 11.2, "pts": 4, "bal": 13.0, "sw": 315, "ra": 68, "beam": "24.5 / 26.5 / 23", "pat": "16x19", "url": "https://www.tennis-warehouse.com/Yonex_EZONE_100_2025/descpage-EZ10BB.html", "pros": {"k": "family", "n": ["Ben Shelton", "Casper Ruud", "Daniel Altmaier", "Marton Fucsovics"], "x": ""}, "tldr": "Controllable power, a plush feel and a big sweet spot. It feels a bit clubby and less whippy than the spin-focused frames."},
+    {"b": "Yonex", "m": "EZONE 100L", "y": "2025", "head": 100, "len": 27, "g": 301, "oz": 10.6, "pts": 3, "bal": 13.18, "sw": 310, "ra": 67, "beam": "24.5 / 26.5 / 23", "pat": "16x19", "url": "https://www.tennis-warehouse.com/Yonex_EZONE_100L_2025/descpage-EZ1LBB.html", "pros": {"k": "club", "n": ["Ben Shelton", "Casper Ruud", "Daniel Altmaier", "Marton Fucsovics"]}, "tldr": "A lighter, more comfortable EZONE with easy power and spin. It is less stable against heavy pace."},
+    {"b": "Yonex", "m": "VCORE 100 8th Gen", "y": "2026", "head": 100, "len": 27, "g": 318, "oz": 11.2, "pts": 4, "bal": 13.0, "sw": 325, "ra": 65, "beam": "24 / 26 / 23", "pat": "16x19", "url": "https://www.tennis-warehouse.com/Yonex_VCORE_100_8th_Gen/descpage-VC108G.html", "pros": {"k": "family", "n": ["Tommy Paul", "João Fonseca", "Brandon Nakashima", "Denis Shapovalov"], "x": ""}, "tldr": "A plush feel with plenty of spin and power, and a stable mid-320s swingweight. It is on the firm side (65 RA) and less controlled than a 98."},
+    {"b": "Yonex", "m": "Percept 97", "y": "", "head": 97, "len": 27, "g": 326, "oz": 11.5, "pts": 7, "bal": 12.59, "sw": 315, "ra": 60, "beam": "21 / 21 / 21", "pat": "16x19", "url": "https://www.tennis-warehouse.com/descpage-PERC97.html", "pros": {"k": "family", "n": ["Frances Tiafoe", "Luciano Darderi", "Tomás Martín Etcheverry", "Marcos Giron"], "x": ""}, "tldr": "Surgical control, great feel and fast handling for experienced players, on a flexible 60 RA frame. It gives little free power and a light swingweight, so many add lead."},
+    {"b": "Prince", "m": "Textreme Warrior 100", "y": "", "head": 100, "len": 27, "g": 316, "oz": 11.1, "pts": 6, "bal": 12.7, "sw": 320, "ra": 66, "beam": "24 / 25.5 / 22.5", "pat": "16x18", "url": "https://www.tennis-warehouse.com/descpage-W100.html", "pros": {"k": "none", "n": []}, "tldr": "Easy to swing and spin-friendly, with a very head-light feel and an arm-friendlier frame than many stiffer rivals. It is light, less stable against big pace, and many players add weight."},
+    {"b": "Prince", "m": "Ripstick 100 300g", "y": "2025", "head": 100, "len": 27, "g": 318, "oz": 11.2, "pts": 4, "bal": 13.0, "sw": 326, "ra": 67, "beam": "27 / 25.5 / 22", "pat": "16x18", "url": "https://www.tennis-warehouse.com/Prince_Ripstick_100_300g/descpage-25RIPH.html", "pros": {"k": "none", "n": []}, "tldr": "Powerful, spin-friendly and comfortable, with an open 16×18 pattern for easy spin and depth. The open pattern costs some control and string life."}
+  ];
+
+  /* ---------- racket finder ---------- */
+  function rkName(r) { return r.b + " " + r.m + (r.y ? " (" + r.y + ")" : ""); }
+  function rkBalMM(r) { return Math.max(300, Math.min(360, Math.round(r.bal * 25.4))); }
+  function rkBeam(r) { var n = r.beam.split("/").map(parseFloat); return Math.round((n[0] + n[1] + n[2]) / 3); }
+  function rkType(r) {
+    if (r.head >= 107 || (r.g < 270 && r.pts < 0)) return "Power";
+    if (r.g >= 326 && r.head <= 98) return "Traditional player’s";
+    if (r.g > 312) return "Modern player’s";
+    return "Tweener";
+  }
+  function rkZones(r) {
+    var t = {}; Object.keys(state.setups.A).forEach(function (k) { t[k] = state.setups.A[k]; });
+    t.head = r.head; t.weight = Math.max(225, r.g - 16); t.balance = rkBalMM(r); t.ra = r.ra; t.beam = rkBeam(r); t.pattern = r.pat;
+    return specDefs(t, evaluate(t)).map(function (o) { return gaugeCalc(o).cur[2]; });
+  }
+
+  function tourHTML(r) {
+    var p = r.pros; if (!p) return "";
+    var body;
+    if (p.k === "none") body = "No ATP Top 100 players use this racket family, so it is a club-level frame.";
+    else if (p.k === "club") body = "This is a lighter, club-level version. Tour players on the same family use heavier frames: " + p.n.join(", ") + ".";
+    else body = p.n.join(", ") + "." + (p.x ? " " + p.x : "");
+    return '<div class="rkTour"><b>' + (p.k === "family" ? "Known tour players on this family" : "On tour") + '</b><span>' + body + '</span>' +
+      '<small>Source: Tennis Nerd, ATP Top 100 racket count, August 2026. Pros usually play older or customized frames painted to look like the current model, so this shows the family they endorse.</small></div>';
+  }
+
+  function showRacket(r) {
+    var z = rkZones(r), name = rkName(r), sw = r.sw <= 305 ? "low" : r.sw <= 325 ? "medium" : "high";
+    var data = 'data-head="' + r.head + '" data-strung="' + r.g + '" data-balance="' + rkBalMM(r) + '" data-ra="' + r.ra + '" data-beam="' + rkBeam(r) + '" data-pattern="' + r.pat + '"';
+    var tile = function (v, label) { return '<span><i class="tl">' + label + '</i><b>' + v + '</b></span>'; };
+    var bal = r.pts === 0 ? "Even" : Math.abs(r.pts) + " pt" + (Math.abs(r.pts) === 1 ? "" : "s") + " " + (r.pts > 0 ? "head-light" : "head-heavy");
+    var btn = function (s) { return '<button type="button" class="exBtn" data-setup="' + s + '" ' + data + ' aria-label="Load ' + name + ' into option ' + s + '"><i class="dot ' + s.toLowerCase() + '"></i>Load into ' + s + '</button>'; };
+    $("#finderCard").innerHTML =
+      '<div class="rkTop"><h3>' + name + '</h3><span class="g-chip out" style="margin:0">Closest type: ' + rkType(r) + '</span></div>' +
+      '<h4 class="rkSub">Specs At A Glance</h4><div class="nums rkSpecs">' +
+        tile(r.head + ' sq in', 'Head size', z[0]) +
+        tile(r.len + ' in', 'Length', r.len > 27 ? 'Extended' : 'Standard') +
+        tile(r.g + ' g <small>(' + r.oz.toFixed(1) + ' oz)</small>', 'Strung weight', z[1]) +
+        tile(bal, 'Balance point', z[2]) +
+        tile(r.sw, 'Swingweight', sw) +
+        tile(r.ra, 'Stiffness (RA)', z[3]) +
+        tile(r.beam + ' mm', 'Beam width') +
+        tile(r.pat.replace("x", "×"), 'String pattern', z[4]) +
+      '</div>' + tourHTML(r) + (r.tldr ? '<p class="rkTldr"><b>The TLDR:</b> ' + r.tldr + '</p>' : '') +
+      (r.len > 27 ? '<p class="fine" style="margin:0">This racket is ' + r.len + ' in long. Its balance is listed against its own even point, and this tool measures against a 27 in frame, so the chart will show it slightly less head-light than listed. The tool doesn’t model length.</p>' : '') +
+      (r.alt ? '<p class="fine" style="margin:0">' + r.alt.src + ' lists swingweight ' + r.alt.sw + ' and stiffness ' + r.alt.ra + ' for this racket, against ' + r.sw + ' and ' + r.ra + ' at Tennis Warehouse. <a href="' + r.alt.url + '" target="_blank" rel="noopener">See it at ' + r.alt.src + '</a>. Small differences between retailers are normal.</p>' : '') +
+      '<div class="rkAct">' + btn("A") + btn("B") + '<a href="' + r.url + '" target="_blank" rel="noopener">See it at Tennis Warehouse</a></div>';
+    $("#finderCard").hidden = false;
+  }
+
+  function buildFinder() {
+    var q = $("#racketQ"), list = $("#racketList"), sel = $("#brandSel"), items = [], idx = -1;
+    var brands = []; RACKET_DB.forEach(function (r) { if (brands.indexOf(r.b) < 0) brands.push(r.b); }); brands.sort();
+    sel.innerHTML = '<option value="">All brands (' + RACKET_DB.length + ' rackets)</option>' + brands.map(function (b) {
+      return '<option value="' + b + '">' + b + ' (' + RACKET_DB.filter(function (r) { return r.b === b; }).length + ')</option>';
+    }).join("");
+    var filtered = function () {
+      var b = sel.value, t = q.value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+      return RACKET_DB.filter(function (r) {
+        if (b && r.b !== b) return false;
+        var hay = (r.b + " " + r.m + " " + r.y).toLowerCase();
+        return t.every(function (w) { return hay.indexOf(w) >= 0; });
+      });
+    };
+    var mark = function () {
+      Array.prototype.forEach.call(list.children, function (li, i) { li.setAttribute("aria-selected", i === idx ? "true" : "false"); });
+      if (idx >= 0 && list.children[idx]) { list.children[idx].scrollIntoView({ block: "nearest" }); q.setAttribute("aria-activedescendant", "rk-" + idx); }
+    };
+    var open = function () {
+      items = filtered(); idx = -1;
+      list.innerHTML = items.length ? items.map(function (r, i) {
+        return '<li role="option" id="rk-' + i + '" data-i="' + i + '" aria-selected="false"><b>' + r.m + (r.y ? " (" + r.y + ")" : "") + '</b><span>' + r.b + '</span></li>';
+      }).join("") : '<li class="none">No match. Try another word, or choose All brands.</li>';
+      list.hidden = false; q.setAttribute("aria-expanded", "true");
+    };
+    var close = function () { list.hidden = true; q.setAttribute("aria-expanded", "false"); };
+    var choose = function (i) { var r = items[i]; if (!r) return; q.value = rkName(r); close(); showRacket(r); };
+    q.addEventListener("input", open);
+    q.addEventListener("focus", open);
+    q.addEventListener("keydown", function (e) {
+      if (e.key === "ArrowDown") { e.preventDefault(); if (list.hidden) open(); idx = Math.min(items.length - 1, idx + 1); mark(); }
+      else if (e.key === "ArrowUp") { e.preventDefault(); idx = Math.max(0, idx - 1); mark(); }
+      else if (e.key === "Enter") { if (!list.hidden && items.length) { e.preventDefault(); choose(idx >= 0 ? idx : 0); } }
+      else if (e.key === "Escape") close();
+    });
+    list.addEventListener("mousedown", function (e) { var li = e.target.closest("li[data-i]"); if (li) { e.preventDefault(); choose(+li.dataset.i); } });
+    var hold = 0;
+    sel.addEventListener("change", function () {
+      q.value = ""; $("#finderCard").hidden = true;
+      q.placeholder = sel.value ? "Pick a " + sel.value + " model, or type to narrow the list" : "Type a model, like Pure Drive, Blade or EZONE";
+      open(); q.focus(); hold = Date.now() + 600;
+    });
+    document.addEventListener("click", function (e) { if (Date.now() < hold) return; if (!e.target.closest(".comboWrap")) close(); });
+  }
+
+  /* ---------- racket zoom ---------- */
+  /* The drawing is never cropped. Zooming makes the whole SVG bigger inside a scrollable frame. */
+  var VW = 240, VH = 520, zoom = { z: 1 }, lastRacketSVG = "", lastWho = "", lastNote = "", zoomOpener = null;
+  var MOUNTS = ["#racketMount", "#zmount"];
+
+  function applyViews() {
+    var z = state.page === "strings" ? 1 : zoom.z;
+    MOUNTS.forEach(function (id) { var el = $(id); el.style.setProperty("--z", z); el.classList.toggle("zoomed", z > 1.01); });
+    var lab = zoom.z.toFixed(1) + "×";
+    ["#zoomBar .zlabel", "#zbar2 .zlabel"].forEach(function (id) { var l = $(id); if (l) l.textContent = lab; });
+  }
+  function centerOn(y) {
+    var go = function () {
+      MOUNTS.forEach(function (id) {
+        var el = $(id), svg = $(id + " svg"); if (!svg || !svg.getBoundingClientRect) return;
+        var r = svg.getBoundingClientRect(); if (!r.height) return;
+        el.scrollTop = y / VH * r.height - el.clientHeight / 2;
+        el.scrollLeft = (r.width - el.clientWidth) / 2;
+      });
+    };
+    if (window.requestAnimationFrame) window.requestAnimationFrame(go); else go();
+  }
+  function renderModal() {
+    if ($("#zmodal").hidden) return;
+    $("#zmount").innerHTML = lastRacketSVG;
+    $("#zwho").innerHTML = lastWho + (lastNote ? '<p class="fine" style="margin:4px 0 0">' + lastNote + '</p>' : "");
+    applyViews();
+  }
+  function openZoom(btn) {
+    zoomOpener = btn || null;
+    zoom.z = 1;
+    $("#zmodal").hidden = false;
+    if (document.body) document.body.style.overflow = "hidden";
+    renderModal();
+    var c = $("#zclose"); if (c && c.focus) c.focus();
+  }
+  function closeZoom() {
+    if ($("#zmodal").hidden) return;
+    $("#zmodal").hidden = true;
+    if (document.body) document.body.style.overflow = "";
+    if (zoomOpener && zoomOpener.focus) zoomOpener.focus();
+  }
+  function yTargets(kind) {
+    var list = state.compare ? [state.setups.A, state.setups.B] : [cur()];
+    return list.map(function (s) {
+      var g = geo(s);
+      if (kind === "head") return g.cy;
+      if (kind === "sweet") return g.cy - g.iry * 0.06;
+      return g.buttY - (s.balance / 25.4) * g.sc;
+    });
+  }
+  function zoomTo(kind) {
+    var ys = yTargets(kind), avg = ys.reduce(function (a, b) { return a + b; }, 0) / ys.length;
+    if (kind === "head") zoom.z = ys.length > 1 ? 1.5 : 1.8;
+    else if (kind === "sweet") zoom.z = 2.4;
+    else zoom.z = ys.length > 1 ? Math.max(1.3, Math.min(2.4, VH / (Math.abs(ys[0] - ys[1]) + 130))) : 2.4;
+    applyViews(); centerOn(avg);
+  }
+  function zoomFit() { zoom.z = 1; applyViews(); centerOn(VH / 2); }
+  function zoomStep(f, id, px, py) {
+    id = id || (($("#zmodal").hidden) ? "#racketMount" : "#zmount");
+    var el = $(id), svg = $(id + " svg"), fx = 0.5, fy = 0.5, r;
+    if (svg && svg.getBoundingClientRect) {
+      r = svg.getBoundingClientRect();
+      if (px === undefined) { px = (el.clientWidth || 0) / 2; py = (el.clientHeight || 0) / 2; }
+      if (r.width && r.height) { fx = (el.scrollLeft + px) / r.width; fy = (el.scrollTop + py) / r.height; }
+    }
+    zoom.z = Math.min(3.5, Math.max(1, zoom.z * f));
+    applyViews();
+    MOUNTS.forEach(function (mid) {
+      var e = $(mid), s = $(mid + " svg"); if (!s || !s.getBoundingClientRect) return;
+      var rr = s.getBoundingClientRect(); if (!rr.width) return;
+      if (mid === id) { e.scrollLeft = fx * rr.width - px; e.scrollTop = fy * rr.height - py; }
+      else { e.scrollLeft = (rr.width - e.clientWidth) / 2; e.scrollTop = fy * rr.height - e.clientHeight / 2; }
+    });
+  }
+
+  function buildZoom() {
+    var core = '<button type="button" class="zbtn" data-act="out" aria-label="Zoom out">−</button><span class="zlabel">1.0×</span><button type="button" class="zbtn" data-act="in" aria-label="Zoom in">+</button>' +
+      '<button type="button" class="zbtn" data-act="fit">Fit</button><button type="button" class="zbtn" data-act="head">Head</button><button type="button" class="zbtn" data-act="sweet">Sweet spot</button><button type="button" class="zbtn" data-act="bal">Balance</button>';
+    $("#zoomBar").innerHTML = core + '<button type="button" class="zbtn" data-act="enlarge">Enlarge</button>';
+    $("#zbar2").innerHTML = core;
+    document.addEventListener("click", function (e) {
+      var b = e.target.closest(".zbtn"); if (!b) return;
+      var a = b.dataset.act;
+      if (a === "in") zoomStep(1.3); else if (a === "out") zoomStep(1 / 1.3);
+      else if (a === "fit") zoomFit();
+      else if (a === "head" || a === "sweet" || a === "bal") zoomTo(a);
+      else if (a === "enlarge") openZoom(b);
+      else if (a === "close") closeZoom();
+    });
+    $("#zmodal").addEventListener("click", function (e) { if (e.target === $("#zmodal")) closeZoom(); });
+    document.addEventListener("keydown", function (e) {
+      if ($("#zmodal").hidden) return;
+      var el = $("#zmount");
+      if (e.key === "Escape") closeZoom();
+      else if (e.key === "+" || e.key === "=") zoomStep(1.3);
+      else if (e.key === "-") zoomStep(1 / 1.3);
+      else if (e.key === "0") zoomFit();
+      else if (e.key === "ArrowUp") { e.preventDefault(); el.scrollTop -= 60; }
+      else if (e.key === "ArrowDown") { e.preventDefault(); el.scrollTop += 60; }
+      else if (e.key === "ArrowLeft") { e.preventDefault(); el.scrollLeft -= 60; }
+      else if (e.key === "ArrowRight") { e.preventDefault(); el.scrollLeft += 60; }
+    });
+    MOUNTS.forEach(function (id) {
+      var el = $(id), drag = null;
+      el.addEventListener("pointerdown", function (e) {
+        if (zoom.z <= 1.01 || !e.target.closest("svg")) return;
+        drag = { x: e.clientX, y: e.clientY };
+        if (el.setPointerCapture) { try { el.setPointerCapture(e.pointerId); } catch (x) {} }
+      });
+      el.addEventListener("pointermove", function (e) {
+        if (!drag) return;
+        el.scrollLeft -= e.clientX - drag.x; el.scrollTop -= e.clientY - drag.y;
+        drag = { x: e.clientX, y: e.clientY };
+      });
+      var stop = function () { drag = null; };
+      el.addEventListener("pointerup", stop); el.addEventListener("pointercancel", stop);
+      el.addEventListener("dblclick", function () { if (zoom.z > 1.01) zoomFit(); else zoomTo("head"); });
+      if (id === "#zmount") el.addEventListener("wheel", function (e) {
+        e.preventDefault();
+        var r = el.getBoundingClientRect();
+        zoomStep(e.deltaY < 0 ? 1.15 : 1 / 1.15, "#zmount", e.clientX - r.left, e.clientY - r.top);
+      }, { passive: false });
+    });
+  }
+
+  /* ---------- racket builder ---------- */
+  var RB = ["head", "weight", "balance", "ra", "beam"];
+  var RB_NAME = { head: "Head size", weight: "Weight", balance: "Balance", ra: "Stiffness", beam: "Beam width", pattern: "Pattern" };
+  function sdef(k) { return SLIDERS.filter(function (d) { return d.k === k; })[0]; }
+  function rVals(r) { return { head: r.head, weight: Math.max(225, Math.min(340, r.g - 16)), balance: rkBalMM(r), ra: r.ra, beam: rkBeam(r), pattern: r.pat }; }
+  function fmtV(k, v) { return k === "head" ? v + " sq in" : k === "weight" ? v + " g" : k === "balance" ? v + " mm" : k === "ra" ? v + " RA" : k === "beam" ? v + " mm" : String(v).replace("x", "×"); }
+  function fitColor(a) { return a >= 0.8 ? "#2F9E62" : a >= 0.5 ? "#E3A008" : "#D9534F"; }
+  function diffText(k, user, rv) {
+    var d = rv - user; if (d === 0) return "exactly your pick";
+    var unit = k === "head" ? " sq in" : k === "weight" ? " g" : k === "ra" ? " RA" : " mm";
+    return Math.abs(d) + unit + (d > 0 ? " above" : " below") + " your pick";
+  }
+  function alignOf(s, r) {
+    var v = rVals(r), out = {}, tot = 0;
+    RB.forEach(function (k) {
+      var d = sdef(k), a = Math.max(0, 1 - Math.abs(s[k] - v[k]) / (0.33 * (d.max - d.min)));
+      out[k] = { a: a, v: v[k] }; tot += a;
+    });
+    var pa = Math.max(0, 1 - Math.abs(OPEN[s.pattern] - OPEN[v.pattern]));
+    out.pattern = { a: pa, v: v.pattern }; tot += pa;
+    out.total = tot / 6;
+    return out;
+  }
+  function computeMatches() {
+    var s = cur();
+    return RACKET_DB.map(function (r) { return { r: r, al: alignOf(s, r) }; })
+      .sort(function (x, y) { return y.al.total - x.al.total; }).slice(0, 3);
+  }
+  function renderBuilder() {
+    var on = state.searched;
+    $("#mPanel").hidden = !on; $("#findBar").hidden = on;
+    $("#bGrid").classList.toggle("searched", on);
+    if (!on) {
+      RB.forEach(function (k) { $("#mark-" + k).hidden = true; $("#band-" + k).hidden = true; $("#fit-" + k).innerHTML = ""; });
+      $("#fit-pattern").innerHTML = "";
+      Array.prototype.forEach.call($("#patternSeg").children, function (b) { b.classList.remove("rk"); });
+      return;
+    }
+    var s = cur(), ms = computeMatches();
+    if (state.mIdx > 2 || state.mIdx < 0) state.mIdx = 0;
+    var m = ms[state.mIdx], r = m.r, pct = Math.round(m.al.total * 100), col = fitColor(m.al.total);
+    $("#mTabs").innerHTML = ms.map(function (x, i) {
+      return '<button type="button" class="mTab" data-i="' + i + '" aria-pressed="' + (i === state.mIdx ? "true" : "false") + '"><b>' + Math.round(x.al.total * 100) + '%</b><span>#' + (i + 1) + ' ' + rkName(x.r) + '</span></button>';
+    }).join("");
+
+    var pos = function (k, v) {
+      if (k === "pattern") return Math.max(0, PATTERNS.indexOf(v)) / 3;
+      var d = sdef(k); return Math.min(1, Math.max(0, (v - d.min) / (d.max - d.min)));
+    };
+    var P = function (x) { return "calc(8px + (100% - 16px) * " + x + ")"; };
+    var rows = RB.concat(["pattern"]).map(function (k) {
+      var a = m.al[k], c = fitColor(a.a), pu = pos(k, s[k]), pr = pos(k, a.v), lo = Math.min(pu, pr), hi = Math.max(pu, pr);
+      var ticks = k === "pattern" ? [0, 1, 2, 3].map(function (i) { return '<i class="mrTick" style="left:' + P(i / 3) + '"></i>'; }).join("") : "";
+      return '<div class="mRow"><div class="mrTop"><span class="nm">' + RB_NAME[k] + '</span><span class="pc" style="color:' + c + '">' + Math.round(a.a * 100) + '% aligned</span></div>' +
+        '<div class="mrTrack"><i class="mrLine"></i>' + ticks + '<i class="mrBand" style="left:' + P(lo) + ';width:calc((100% - 16px) * ' + (hi - lo) + ');background:' + c + '"></i><i class="mrYou" style="left:' + P(pu) + '"></i><i class="mrRk" style="left:' + P(pr) + ';background:' + c + '"></i></div>' +
+        '<div class="mrVals"><span class="chipYou"><small>You</small><b>' + fmtV(k, s[k]) + '</b></span><span class="chipRk" style="border-color:' + c + '"><small>Racket</small><b>' + fmtV(k, a.v) + '</b></span></div></div>';
+    }).join("");
+    var data = 'data-head="' + r.head + '" data-strung="' + r.g + '" data-balance="' + rkBalMM(r) + '" data-ra="' + r.ra + '" data-beam="' + rkBeam(r) + '" data-pattern="' + r.pat + '"';
+    var btn = function (x) { return '<button type="button" class="exBtn" data-setup="' + x + '" ' + data + ' aria-label="Load ' + rkName(r) + ' into option ' + x + '"><i class="dot ' + x.toLowerCase() + '"></i>Load into ' + x + '</button>'; };
+    $("#mDetail").innerHTML =
+      '<div class="mTop"><h3>' + rkName(r) + '</h3><span class="g-chip" style="margin:0;background:' + col + ';color:#13243A">' + pct + '% match</span></div>' +
+      '<p class="fine" style="margin:4px 0 0">Closest type: ' + rkType(r) + '</p>' +
+      '<div class="mLegend"><span><i class="lgYou"></i>Your pick</span><span><i class="lgRk"></i>This racket</span></div>' +
+      '<div class="mRows">' + rows + '</div>' +
+      (r.tldr ? '<p class="rkTldr"><b>The TLDR:</b> ' + r.tldr + '</p>' : '') +
+      '<div class="rkAct" style="margin-top:10px">' + btn("A") + btn("B") + '<a href="' + r.url + '" target="_blank" rel="noopener">See it at Tennis Warehouse</a></div>' +
+      '<p class="fine" style="margin:8px 0 0">Racket weights are estimated unstrung, as strung weight minus about 16 g.</p>';
+
+    RB.forEach(function (k) {
+      var d = sdef(k), a = m.al[k], rv = a.v, uv = s[k], c = fitColor(a.a);
+      var pr = Math.min(1, Math.max(0, (rv - d.min) / (d.max - d.min))), pu = Math.min(1, Math.max(0, (uv - d.min) / (d.max - d.min)));
+      var mark = $("#mark-" + k), band = $("#band-" + k), fit = $("#fit-" + k), lo = Math.min(pr, pu), hi = Math.max(pr, pu);
+      mark.hidden = false; band.hidden = false;
+      mark.style.left = "calc(12px + (100% - 24px) * " + pr + ")"; mark.style.background = c;
+      band.style.left = "calc(12px + (100% - 24px) * " + lo + ")"; band.style.width = "calc((100% - 24px) * " + (hi - lo) + ")"; band.style.background = c;
+      fit.innerHTML = '<span class="fitBar"><i style="width:' + Math.round(a.a * 100) + '%;background:' + c + '"></i></span><span><b>' + r.m + ':</b> ' + fmtV(k, rv) + ', ' + diffText(k, uv, rv) + ', ' + Math.round(a.a * 100) + '% aligned</span>';
+    });
+    var pa = m.al.pattern, pc = fitColor(pa.a);
+    $("#fit-pattern").innerHTML = '<span class="fitBar"><i style="width:' + Math.round(pa.a * 100) + '%;background:' + pc + '"></i></span><span><b>' + r.m + ':</b> ' + fmtV("pattern", pa.v) + (pa.v === s.pattern ? ', same as your pick' : ', different from your pick') + ', ' + Math.round(pa.a * 100) + '% aligned</span>';
+    Array.prototype.forEach.call($("#patternSeg").children, function (b) { b.classList.toggle("rk", b.dataset.p === r.pat); });
+  }
+
+  var STRING_DB = [
+    {"b": "Solinco", "m": "Hyper-G", "type": "Co-polyester", "mat": "copoly", "shape": "square", "sn": "Square, four grippy edges", "g": ["16", "16L", "17", "18", "19", "20"], "g0": "16L", "lab": {"s": 218, "l": 25, "sp": 6.1}, "url": "https://www.tennis-warehouse.com/Solinco_Hyper-G_16L_125_String/descpageACSOLINCO-SHG16LG.html", "tldr": "A grippy square-edged co-poly with big spin, precise control and better tension holding than most polys. It feels medium firm and is underpowered for beginners."},
+    {"b": "Solinco", "m": "Tour Bite", "type": "Co-polyester", "mat": "poly", "shape": "square", "sn": "Square, four sharp edges", "g": ["15L", "16", "16L", "17", "18", "19", "20"], "g0": "16L", "lab": {"s": 238, "l": 25, "sp": 5.9}, "url": "https://www.tennis-warehouse.com/SolincoString.html", "tldr": "Solinco’s most popular string: square edges bite the ball for spin and control, with a firm, low-power response. Tennis Warehouse measures it stiffer than Hyper-G."},
+    {"b": "Solinco", "m": "Hyper-G Round", "type": "Co-polyester", "mat": "copoly", "shape": "round", "sn": "Round", "g": ["16L", "17"], "g0": "16L", "lab": {"s": 226, "sp": 7.3}, "url": "https://www.tennis-warehouse.com/SolincoString.html", "tldr": "A round take on Hyper-G with slightly less bite but excellent feel and long-lasting playability. Spin potential is a little above average for a poly."},
+    {"b": "Weiss Cannon", "m": "Ultra Cable", "type": "Co-polyester", "mat": "poly", "shape": "square", "sn": "Square", "g": ["17"], "g0": "17", "lab": {}, "url": "https://www.tennis-warehouse.com/Weiss_CANNON_Ultra_Cable_17_123_String_Yellow/descpageACGLORY-WCUC17.html", "tldr": "A firm, square-shaped co-poly that rates first for spin potential in Tennis Warehouse’s lab. Its low-powered response lets big hitters swing out."},
+    {"b": "Volkl", "m": "Cyclone", "type": "Co-polyester", "mat": "copoly", "shape": "multi", "sn": "Gear-like decagon, 10 sides", "g": ["16", "17", "18"], "g0": "17", "lab": {"s": 191}, "url": "https://www.tennis-warehouse.com/Volkl_Cyclone_17_125_String/descpageACVOLKL-VCYC17S.html", "tldr": "A staff-favorite value poly with great feel, strong ball pocketing and top-tier spin potential. It is softer than most polys, at 191 lb/in in the lab."},
+    {"b": "Volkl", "m": "Cyclone Tour", "type": "Co-polyester", "mat": "copoly", "shape": "twisted", "sn": "Twisted gear shape", "g": ["16", "17", "18"], "g0": "17", "lab": {}, "url": "https://www.tennis-warehouse.com/Volkl_Tennis_String/catpage-VOLKLSTR.html", "tldr": "A twisted gear-shaped co-poly that makes spin easy while keeping surprising comfort and power for a firm string. The thinnest gauge gives the most spin."},
+    {"b": "Volkl", "m": "V-Torque", "type": "Co-polyester", "mat": "copoly", "shape": "twisted", "sn": "Shaped and twisted", "g": ["16"], "g0": "16", "lab": {}, "url": "https://www.tennis-warehouse.com/Volkl_Tennis_String/catpage-VOLKLSTR.html", "tldr": "A shaped, twisted co-poly with an exceptional mix of spin, precision and feel, and above-average comfort for a control string."},
+    {"b": "Volkl", "m": "V-Square", "type": "Co-polyester", "mat": "copoly", "shape": "square", "sn": "Four sharp edges", "g": ["16", "17", "18", "19"], "g0": "17", "lab": {}, "url": "https://www.tennis-warehouse.com/Volkl_Tennis_String/catpage-VOLKLSTR.html", "tldr": "A thin co-poly with four sharp edges for maximum bite, and impressive feel for a poly."},
+    {"b": "Babolat", "m": "RPM Blast", "type": "Co-polyester", "mat": "copoly", "shape": "multi", "sn": "Octagonal, 8 sides", "g": ["15L", "16", "17", "18"], "g0": "16", "lab": {}, "url": "https://www.tennis-warehouse.com/BabolatString.html", "tldr": "Babolat’s octagonal spin-and-control poly. Tennis Warehouse measured it as one of the softest strings in its lab."},
+    {"b": "Babolat", "m": "RPM Blast Rough", "type": "Co-polyester", "mat": "copoly", "shape": "textured", "sn": "Textured, octagonal", "g": ["15L", "16", "17"], "g0": "16", "lab": {}, "url": "https://www.tennis-warehouse.com/Babolat_RPM_Rough_17_125_String/descpageACBAB-BRPMBRS.html", "tldr": "A textured RPM Blast with more power and a softer feel than the original, plus impressive durability."},
+    {"b": "Tourna", "m": "Big Hitter Silver 7 Tour", "type": "Co-polyester", "mat": "poly", "shape": "multi", "sn": "Seven sharp edges", "g": ["16", "17"], "g0": "17", "lab": {}, "url": "https://www.tennis-warehouse.com/Tourna_Big_Hitter_Silver_17_125_String/descpageACUNIQUE-UBIGHIT17.html", "tldr": "A firm seven-edged poly with strong tension holding for the breed, outstanding durability and easy shot targeting for aggressive players."},
+    {"b": "Dunlop", "m": "Black Widow", "type": "Co-polyester", "mat": "poly", "shape": "multi", "sn": "Seven-sided", "g": ["16", "17", "18"], "g0": "17", "lab": {}, "url": "https://www.tennis-warehouse.com/DunlopString.html", "tldr": "A seven-sided poly for extra bite and access to spin. It is low-powered, so it suits players who want control."},
+    {"b": "Grapplesnake", "m": "Tour M8", "type": "Co-polyester", "mat": "copoly", "shape": "multi", "sn": "Octagonal, textured coating", "g": ["16", "16L"], "g0": "16L", "lab": {}, "url": "https://www.tennis-warehouse.com/Grapplesnake_Tour_M8_17_125_String/descpageACGRAPPLE-GM8S7.html", "tldr": "An octagonal co-poly with a textured coating that adds string movement, pocketing and spin, plus a loud, authoritative sound. It is known for excellent tension maintenance."},
+    {"b": "Luxilon", "m": "ECO Spin 125", "type": "Co-polyester", "mat": "copoly", "shape": "multi", "sn": "Pentagon, 5 sides", "g": ["17"], "g0": "17", "lab": {}, "url": "https://www.tennis-warehouse.com/LuxilonString.html", "tldr": "A sustainable polyester with a pentagon shape built to maximize spin, with precise control and durable tension."},
+    {"b": "Toroline", "m": "Wasabi", "type": "Co-polyester", "mat": "copoly", "shape": "square", "sn": "Square, sharp edges", "g": ["17"], "g0": "17", "lab": {}, "url": "https://www.tennis-warehouse.com/Toroline_Tennis_Strings/catpage-TOROLSTR.html", "tldr": "An ultra spin-friendly square co-poly that rewards full cuts with accuracy. It plays slightly softer than Toroline Caviar 16L."},
+    {"b": "Luxilon", "m": "4G", "type": "Co-polyester", "mat": "poly", "shape": "round", "sn": "Round", "g": ["16", "16L"], "g0": "16L", "lab": {}, "url": "https://www.tennis-warehouse.com/LuxilonString.html", "tldr": "One of Tennis Warehouse’s most durable strings: an ultra-firm co-poly for big hitters and chronic string breakers."},
+    {"b": "Luxilon", "m": "ALU Power", "type": "Co-polyester", "mat": "poly", "shape": "round", "sn": "Round", "g": ["16", "17"], "g0": "17", "lab": {}, "url": "https://www.tennis-warehouse.com/LuxilonString.html", "tldr": "The classic firm, crisp co-poly for control and durability. It gives little power and is firm on the arm."},
+    {"b": "Luxilon", "m": "ALU Power Rough", "type": "Co-polyester", "mat": "poly", "shape": "textured", "sn": "Textured, round", "g": ["16", "17"], "g0": "16", "lab": {}, "url": "https://www.tennis-warehouse.com/LuxilonString.html", "tldr": "ALU Power with a textured surface for extra grip and spin, and the same firm, crisp feel."},
+    {"b": "Yonex", "m": "Poly Tour Pro", "type": "Co-polyester", "mat": "copoly", "shape": "round", "sn": "Round", "g": ["16", "16L", "17", "18"], "g0": "16L", "lab": {}, "url": "https://www.tennis-warehouse.com/YonexString.html", "tldr": "A round, comfortable co-poly built for control and spin without the harshness of the firmest polys."},
+    {"b": "Wilson", "m": "NXT", "type": "Multifilament", "mat": "multi", "shape": "round", "sn": "Round, multifilament", "g": ["16", "17"], "g0": "16", "lab": {}, "url": "https://www.tennis-warehouse.com/WilsonString.html", "tldr": "A premium multifilament that looks, feels and plays much like natural gut, with plush comfort, easy power and good feel. It loses tension faster than gut and wears faster than poly."},
+    {"b": "Tecnifibre", "m": "X-One Biphase", "type": "Multifilament", "mat": "multi", "shape": "round", "sn": "Round, multifilament", "g": ["16", "17", "18"], "g0": "16", "lab": {}, "url": "https://www.tennis-warehouse.com/descpage-X116.html", "tldr": "Premium comfort and easy power with a gut-like feel, and a production process that adds durability. The thinner 18 gauge is more control-oriented."},
+    {"b": "Tecnifibre", "m": "NRG2", "type": "Multifilament", "mat": "multi", "shape": "round", "sn": "Round, multifilament", "g": ["16", "17", "18"], "g0": "16", "lab": {}, "url": "https://www.tennis-warehouse.com/TecnifibreString.html", "tldr": "One of the closest strings to natural gut and the most powerful in Tecnifibre’s range, with an arm-friendly feel."},
+    {"b": "Head", "m": "Velocity MLT", "type": "Multifilament", "mat": "multi", "shape": "round", "sn": "Round, multifilament", "g": ["16", "17"], "g0": "16", "lab": {}, "url": "https://www.tennis-warehouse.com/Head_Tennis_String/catpage-HEADSTR.html", "tldr": "A comfortable, good-value multifilament made from about 1,000 flexible filaments: power with a soft touch and a bit more spin than most multis."},
+    {"b": "Babolat", "m": "Xcel", "type": "Multifilament", "mat": "multi", "shape": "round", "sn": "Round, multifilament", "g": ["16", "17"], "g0": "16", "lab": {}, "url": "https://www.tennis-warehouse.com/BabolatString.html", "tldr": "A premium multifilament that delivers comfort, power and good feel, long popular for arm-friendly playability."},
+    {"b": "Gamma", "m": "Live Wire Professional", "type": "Multifilament", "mat": "multi", "shape": "round", "sn": "Round, multifilament", "g": ["16", "17", "18"], "g0": "17", "lab": {}, "url": "https://www.tennis-warehouse.com/GammaString.html", "tldr": "A thinner, more spin-friendly version of Gamma Professional with the same natural-gut-like feel."},
+    {"b": "Alpha", "m": "Gut 2000", "type": "Multifilament", "mat": "multi", "shape": "round", "sn": "Round, multifilament", "g": ["17"], "g0": "17", "lab": {}, "url": "https://www.tennis-warehouse.com/AlphaString.html", "tldr": "Loaded with comfort and power. This arm-friendly multifilament is one of the best values at Tennis Warehouse."},
+    {"b": "Babolat", "m": "VS Touch Natural Gut", "type": "Natural gut", "mat": "gut", "shape": "round", "sn": "Natural gut", "g": ["15L", "16", "17"], "g0": "16", "lab": {}, "url": "https://www.tennis-warehouse.com/BabolatString.html", "tldr": "The benchmark natural gut: maximum comfort, power and tension maintenance, with a long Grand Slam record. Expensive, and not the pick for string breakers."},
+    {"b": "Wilson", "m": "Natural Gut", "type": "Natural gut", "mat": "gut", "shape": "round", "sn": "Natural gut", "g": ["16", "17"], "g0": "16", "lab": {}, "url": "https://www.tennis-warehouse.com/WilsonString.html", "tldr": "Wilson’s natural gut, with the same soft, lively feel and tension holding at a premium price."},
+    {"b": "Prince", "m": "Synthetic Gut Duraflex", "type": "Synthetic gut", "mat": "synth", "shape": "round", "sn": "Solid-core nylon with Duraflex", "g": ["15L", "16"], "g0": "16", "lab": {}, "url": "https://www.tennis-warehouse.com/PrinceString.html", "tldr": "A perennial starter string with strong all-around playability for the price."},
+    {"b": "Wilson", "m": "Synthetic Gut Power", "type": "Synthetic gut", "mat": "synth", "shape": "round", "sn": "Synthetic gut", "g": ["16", "17"], "g0": "16", "lab": {}, "url": "https://www.tennis-warehouse.com/WilsonString.html", "tldr": "An affordable synthetic gut that offers easy, balanced playability for casual play."},
+    {"b": "Head", "m": "Synthetic Gut", "type": "Synthetic gut", "mat": "synth", "shape": "round", "sn": "Synthetic gut", "g": ["16", "17"], "g0": "16", "lab": {}, "url": "https://www.tennis-warehouse.com/Head_Tennis_String/catpage-HEADSTR.html", "tldr": "A budget synthetic gut with balanced, forgiving playability for casual play."},
+    {"b": "Babolat", "m": "Syn Gut", "type": "Synthetic gut", "mat": "synth", "shape": "round", "sn": "Synthetic gut", "g": ["16", "17"], "g0": "16", "lab": {}, "url": "https://www.tennis-warehouse.com/BabolatString.html", "tldr": "A budget synthetic gut with balanced, forgiving playability for casual play."},
+    {"b": "Tourna", "m": "Synthetic Gut Armour", "type": "Synthetic gut", "mat": "synth", "shape": "round", "sn": "Synthetic gut", "g": ["16", "17"], "g0": "16", "lab": {}, "url": "https://www.tennis-warehouse.com/UniqueString.html", "tldr": "An inexpensive synthetic gut that is durable for its type and easy to play with."}
+  ];
+
+  /* ---------- string finder ---------- */
+  var G_MM = { "15": 1.40, "15L": 1.35, "16": 1.30, "16L": 1.25, "17": 1.20, "18": 1.15, "19": 1.10, "20": 1.10 };
+  function skName(x) { return x.b + " " + x.m; }
+  function gaugeText(g) { return g + " (about " + G_MM[g].toFixed(2) + " mm)"; }
+  function skTmp(x, g) {
+    var t = {}; Object.keys(state.setups.A).forEach(function (k) { t[k] = state.setups.A[k]; });
+    t.mains = x.mat; t.crosses = x.mat; t.hybrid = false; t.shape = x.shape; t.gauge = G_MM[g];
+    return t;
+  }
+  function showString(x) {
+    var sc = stringOnly(skTmp(x, x.g0)), name = skName(x);
+    var tile = function (v, label, extra) { return '<span><i class="tl">' + label + '</i><b>' + v + '</b>' + (extra ? '<em>' + extra + '</em>' : '') + '</span>'; };
+    var lab = x.lab || {};
+    var tiles = tile(x.type, "Type", MATERIALS[x.mat].name) +
+      '<span><i class="tl">Shape</i><b style="display:flex;align-items:center;gap:6px"><svg viewBox="0 0 38 26" width="30" height="20" aria-hidden="true" style="background:#245A9E;border-radius:5px">' + shapeIcon(x.shape, 19, 13, 8.5, "#F4F6F2") + '</svg>' + SHAPES[x.shape].name + '</b><em>' + x.sn + '</em></span>' +
+      tile(x.g.length, "Gauges", x.g.join(", ")) +
+      (lab.s ? tile(lab.s + ' <small>lb/in</small>', "Lab stiffness", "at 1.25 mm") : "") +
+      (lab.l ? tile(lab.l + '%', "Tension loss", "lab, first 24 hours") : "") +
+      (lab.sp ? tile(lab.sp, "Spin potential", "lab") : "");
+    var model = [["power", "Power"], ["control", "Control"], ["spin", "Spin"], ["comfort", "Comfort"], ["life", "String life"], ["hold", "Holds tension"]]
+      .map(function (a) { return tile(sc[a[0]], a[1]); }).join("");
+    var opts = x.g.map(function (g) { return '<option value="' + g + '"' + (g === x.g0 ? " selected" : "") + '>' + gaugeText(g) + '</option>'; }).join("");
+    var btn = function (s) { return '<button type="button" class="skBtn exBtn" data-setup="' + s + '" data-name="' + name + '"><i class="dot ' + s.toLowerCase() + '"></i>Load into ' + s + '</button>'; };
+    $("#skCard").innerHTML =
+      '<div class="rkTop"><h3>' + name + '</h3><span class="g-chip out" style="margin:0">' + x.type + '</span></div>' +
+      '<h4 class="rkSub">Specs At A Glance</h4><div class="nums rkSpecs">' + tiles + '</div>' +
+      '<h4 class="rkSub">How this tool scores it <small style="font-weight:400;color:var(--muted)">(at ' + gaugeText(x.g0) + ')</small></h4><div class="nums rkSpecs">' + model + '</div>' +
+      '<p class="rkTldr"><b>The TLDR:</b> ' + x.tldr + '</p>' +
+      '<div class="rkAct"><label class="fine" style="margin:0">Gauge <select id="skGauge" data-key="' + name + '" style="font:500 0.9rem var(--body);padding:5px 8px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink)">' + opts + '</select></label>' + btn("A") + btn("B") + '<a href="' + x.url + '" target="_blank" rel="noopener">See it at Tennis Warehouse</a></div>';
+    $("#skCard").dataset.key = name;
+    $("#skCard").hidden = false;
+  }
+
+  function buildStringFinder() {
+    var q = $("#skQ"), list = $("#skList"), sel = $("#sBrandSel"), items = [], idx = -1, hold = 0;
+    var brands = []; STRING_DB.forEach(function (x) { if (brands.indexOf(x.b) < 0) brands.push(x.b); }); brands.sort();
+    sel.innerHTML = '<option value="">All brands (' + STRING_DB.length + ' strings)</option>' + brands.map(function (b) {
+      return '<option value="' + b + '">' + b + ' (' + STRING_DB.filter(function (x) { return x.b === b; }).length + ')</option>';
+    }).join("");
+    var filtered = function () {
+      var b = sel.value, t = q.value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+      return STRING_DB.filter(function (x) {
+        if (b && x.b !== b) return false;
+        var hay = (x.b + " " + x.m + " " + x.type + " " + x.sn).toLowerCase();
+        return t.every(function (w) { return hay.indexOf(w) >= 0; });
+      });
+    };
+    var mark = function () {
+      Array.prototype.forEach.call(list.children, function (li, i) { li.setAttribute("aria-selected", i === idx ? "true" : "false"); });
+      if (idx >= 0 && list.children[idx]) { list.children[idx].scrollIntoView({ block: "nearest" }); q.setAttribute("aria-activedescendant", "sk-" + idx); }
+    };
+    var open = function () {
+      items = filtered(); idx = -1;
+      list.innerHTML = items.length ? items.map(function (x, i) {
+        return '<li role="option" id="sk-' + i + '" data-i="' + i + '" aria-selected="false"><b>' + x.m + '</b><span>' + x.b + ' · ' + x.type + '</span></li>';
+      }).join("") : '<li class="none">No match. Try another word, or choose All brands.</li>';
+      list.hidden = false; q.setAttribute("aria-expanded", "true");
+    };
+    var close = function () { list.hidden = true; q.setAttribute("aria-expanded", "false"); };
+    var choose = function (i) { var x = items[i]; if (!x) return; q.value = skName(x); close(); showString(x); };
+    q.addEventListener("input", open); q.addEventListener("focus", open);
+    q.addEventListener("keydown", function (e) {
+      if (e.key === "ArrowDown") { e.preventDefault(); if (list.hidden) open(); idx = Math.min(items.length - 1, idx + 1); mark(); }
+      else if (e.key === "ArrowUp") { e.preventDefault(); idx = Math.max(0, idx - 1); mark(); }
+      else if (e.key === "Enter") { if (!list.hidden && items.length) { e.preventDefault(); choose(idx >= 0 ? idx : 0); } }
+      else if (e.key === "Escape") close();
+    });
+    list.addEventListener("mousedown", function (e) { var li = e.target.closest("li[data-i]"); if (li) { e.preventDefault(); choose(+li.dataset.i); } });
+    sel.addEventListener("change", function () {
+      q.value = ""; $("#skCard").hidden = true;
+      q.placeholder = sel.value ? "Pick a " + sel.value + " string, or type to narrow the list" : "Type a string, like Hyper-G, NXT or Touch VS";
+      open(); q.focus(); hold = Date.now() + 600;
+    });
+    document.addEventListener("click", function (e) { if (Date.now() < hold) return; if (!e.target.closest(".comboWrap")) close(); });
+    document.addEventListener("click", function (e) {
+      var b = e.target.closest(".skBtn"); if (!b) return;
+      var x = STRING_DB.filter(function (r) { return skName(r) === b.dataset.name; })[0]; if (!x) return;
+      var g = $("#skGauge").value || x.g0, s = state.setups[b.dataset.setup];
+      s.mains = x.mat; s.crosses = x.mat; s.hybrid = false; s.shape = x.shape;
+      s.gauge = Math.min(1.40, Math.max(1.10, Math.round(G_MM[g] * 20) / 20));
+      s.sLabel = skName(x) + " " + g; s.sEdited = false;
+      state.active = b.dataset.setup; update(true);
+    });
+  }
+
+  /* ---------- pages (hash routing) ---------- */
+  var PAGES = ["guide", "racket", "strings", "builder"];
+  function route(scrollTop) {
+    var h = (location.hash || "").replace("#", "");
+    if (PAGES.indexOf(h) < 0) h = "guide";
+    state.page = h;
+    $("#buildLayout").hidden = !(h === "racket" || h === "strings");
+    $("#racketPager").hidden = h !== "racket";
+    $("#stringCard").hidden = h !== "strings";
+    $("#builderPage").hidden = h !== "builder";
+    $("#cmpWrap").hidden = h === "builder";
+    $("#guidePage").hidden = h !== "guide";
+    $("#toolbar").hidden = h === "guide";
+    $("#finder").hidden = h !== "racket";
+    $("#stringFinder").hidden = h !== "strings";
+    if (h !== "racket") closeZoom();
+    Array.prototype.forEach.call($("#nav").children, function (a) {
+      if (a.dataset.page === h) { a.setAttribute("aria-current", "page"); if (a.scrollIntoView) a.scrollIntoView({ inline: "center", block: "nearest" }); } else a.removeAttribute("aria-current");
+    });
+    $("#cmpLabel").textContent = h === "strings" ? "Compare strings" : "Compare a racket";
+    syncControls(false);
+    render();
+    if (scrollTop) window.scrollTo(0, 0);
+  }
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest(".exBtn"); if (!b) return;
+    var d = b.dataset, s = state.setups[d.setup];
+    s.head = +d.head; s.weight = Math.max(225, +d.strung - 16); s.balance = +d.balance;
+    s.ra = +d.ra; s.beam = +d.beam; s.pattern = d.pattern;
+    s.label = (b.getAttribute("aria-label") || "").replace(/^Load /, "").replace(/ into option [AB]$/, "") || "Custom"; s.edited = false;
+    state.active = d.setup;
+    update(true);
+    if (state.page !== "builder") location.hash = "racket";
+  });
+  window.addEventListener("hashchange", function () { route(true); });
+
+  buildFinder();
+  buildStringFinder();
+  buildZoom();
+  update(true);
+  route(false);
+})();
+</script>
+</body>
+</html>
